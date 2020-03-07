@@ -21,19 +21,19 @@ const Order = mongoose.model('Order', new mongoose.Schema({
         maxlength: 50
     },
     prouctIds: {
-        type: String[],
+        type: Array,
         required: true,
         minlength: 5,
         maxlength: 50
     },
     amount: {
-        type: int,
+        type: Number,
         required: true,
         minlength: 5,
         maxlength: 50
     },
     price: {
-        type: Double,
+        type: Number,
         required: true,
         minlength: 5,
         maxlength: 50
@@ -51,7 +51,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
         maxlength: 50
     },
     PaymentIds: {
-        type: String[],
+        type: Array,
         required: true,
         minlength: 5,
         maxlength: 50
@@ -61,7 +61,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
 
 }))
 
-function validateData(){
+function validateOrder(){
 
 }
 
