@@ -21,7 +21,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
         maxlength: 50
     },
     prouctIds: {
-        type: String,
+        type: String[],
         required: true,
         minlength: 5,
         maxlength: 50
@@ -51,7 +51,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
         maxlength: 50
     },
     PaymentIds: {
-        type: String,
+        type: String[],
         required: true,
         minlength: 5,
         maxlength: 50
