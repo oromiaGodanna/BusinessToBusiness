@@ -2,15 +2,19 @@ var mongoose = require('mongoose');
 var Joi = require('joi');
 
 
-const notificationTypeSchema = new mongoose.Schema({
-    type: { type: String, required: true }
-});
+// const notificationTypeSchema = new mongoose.Schema({
+//     type: { type: String, required: true }
+// });
 
-const NotificationType = mongoose.model('NotificationType', notificationTypeSchema);
+// const NotificationType = mongoose.model('NotificationType', notificationTypeSchema);
 
 var SysNotification = mongoose.model('SysNotification', new mongoose.Schema({
 
-    notificationType: { type: notificationTypeSchema, required: true },
+    notificationType: {
+        type: String, 
+        required: true,
+        enum: ['promotion', 'order', 'performa']
+    },
     recipients: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Customer',
@@ -22,7 +26,8 @@ var SysNotification = mongoose.model('SysNotification', new mongoose.Schema({
     // how to make the target refer to multiple collections?
     target: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Promotion Order Quotations',
+        //ref: 'Promotion Order Quotations',
+        ref: 'Order',
         required: true
     },
     viewed: { type: Boolean, default: false }
@@ -45,17 +50,17 @@ function validateSysNotification(sysNotification) {
 }
 
 
-function validateNotificationType(notificationType) {
+// function validateNotificationType(notificationType) {
 
-    const schema = {
-        type: Joi.string().required(),
-    };
+//     const schema = {
+//         type: Joi.string().required(),
+//     };
 
-    return Joi.validate(notificationType, schema);
-}
+//     return Joi.validate(notificationType, schema);
+// }
 
 
 exports.SysNotification = SysNotification;
-exports.NotificationType = NotificationType;
+// exports.NotificationType = NotificationType;
 exports.validateSysNotification = validateSysNotification;
-exports.validateNotificationType = validateNotificationType;
+// exports.validateNotificationType = validateNotificationType;

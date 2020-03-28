@@ -8,7 +8,7 @@ const { SysNotification,
 
 
 // get all notifications of user
-router.get('/:userId', async (req, res) => {
+router.get('/user/:userId', async (req, res) => {
     const notifications = await SysNotification.find({
         recipients: req.params.userId
     });
@@ -28,7 +28,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // get all notifications of user, by type
-router.get('/:userId/:type', async (req, res) => {
+router.get('/user/:userId/type/:type', async (req, res) => {
+
     const notifications = await SysNotification.find({
         recipients: req.params.userId,
         notificationType: req.params.type
@@ -45,10 +46,10 @@ router.post('/', async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
 
     const notification = new SysNotification({
-        notificationType: NotificationType({ type: req.body.notificationType}),
+        notificationType: req.body.notificationType,
         recipients: req.body.recipients,
         title: req.body.title,
-        content: req.body.body,
+        content: req.body.content,
         target: req.body.target
     });
     await notification.save();
@@ -68,19 +69,59 @@ router.delete('/:id', async (req, res) => {
 
 
 // delete all notifications of user, clear
-router.delete('/:userId', async (req, res) => {
-    const notifications = await SysNotification.find({
+router.delete('/user/:userId', async (req, res) => {
+    const notifications = await SysNotification.updateMany({
         recipients: req.params.userId
-    });
+    }, 
+    {
+        $pullAll: { recipients: [ req.params.userId ] }
+    }
+    );
 
     if (!notifications) return res.status(404).send('There are no notifications for this user.');
 
-    notifications.recipients.remove(req.params.userId);
-
-    await notifications.save();
+    //console.log(notifications);
 
     res.send(notifications);
 });
+
+
+
+// delete all notifications of user, by type
+router.delete('/user/:userId/type/:type', async (req, res) => {
+    const notifications = await SysNotification.updateMany({
+        recipients: req.params.userId,
+        notificationType: req.params.type
+    }, 
+    {
+        $pullAll: { recipients: [ req.params.userId ] }
+    }
+    );
+
+    if (!notifications) return res.status(404).send('There are no notifications for this user.');
+
+    //console.log(notifications);
+
+    res.send(notifications);
+});
+
+
+/********************************notification_type**************** */
+
+
+// // create a notification type
+// router.post('/type', async (req, res) => {
+//     const { error } = validateNotificationType(req.body);
+//     if (error) return res.status(400).send(error.details[0].message);
+
+//     const notificationType = new NotificationType({
+//         type: req.body.type
+//     });
+//     await notificationType.save();
+
+//     res.send(notificationType);
+// });
+
 
 
 module.exports = router;
