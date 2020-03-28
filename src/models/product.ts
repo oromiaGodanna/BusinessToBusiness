@@ -6,6 +6,13 @@ var Schema = mongoose.Schema;
 
 var additionalProductInfo = new Object;
 // add constraints 
+var filterSchema = new Schema({
+    productCategory:{type:String},
+    productSubCategory:{type:String},
+    minProductPrice:{type:String},
+    maxProductPrice:{type:String},
+    
+});
 const productSchema = new Schema({
     userId : {type:String, required: true},
     specialOfferId:{type:String,default:null},
@@ -34,4 +41,5 @@ function validateProduct(product) {
 }
 
 module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model("Filter", filterSchema);
 exports.validateProduct = validateProduct;
