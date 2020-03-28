@@ -1,11 +1,12 @@
 import { ObjectID } from "bson";
 
 var mongoose = require('mongoose');
+var Joi = require('joi');
 var Schema = mongoose.Schema;
 
 var additionalProductInfo = new Object;
 // add constraints 
-var productSchema = new Schema({
+const productSchema = new Schema({
     userId : {type:String, required: true},
     specialOfferId:{type:String,default:null},
     productName:{type:String,required:true},
@@ -20,4 +21,17 @@ var productSchema = new Schema({
     createDate:{type:Date,default: Date.now()},
 });
 
+function validateProduct(product) {
+
+    const productS = {
+        productName: Joi.string().required(),
+        productCategory:Joi.string().required(),
+        productPrice:Joi.number().required()
+    };
+
+        
+    return Joi.validate(validateProduct, productS);
+}
+
 module.exports = mongoose.model("Product", productSchema);
+exports.validateProduct = validateProduct;

@@ -137,10 +137,10 @@ router.post("/updateProduct/:id", function (req, res) {
 });
 
 router.get("/getProducts", function (req, res) {
-  Product.find({}, function (err, products) {
+  Product.find({specialOfferId:null}, function (err, products) {
     if (err) throw err;
     res.send(products);
-  }).sort({ createDate: -1 });
+  }).sort('createDate');
 });
 
 router.get("/getProduct/:id", function (req, res) {
