@@ -10,9 +10,9 @@ var { Conversation, Message, validateMessage, validateConversation } = require('
 router.get('/:userId', async (req, res) => {
     const conversations = await Conversation
         .find({
-            $and: [
-                { $or: [{ user1: req.params.userId }, { "deleted.user1": false }] },
-                { $or: [{ user2: req.params.userId }, { "deleted.user2": false }] }
+            $or: [
+                { $and: [{ user1: req.params.userId }, { "deleted.user1": false }] },
+                { $and: [{ user2: req.params.userId }, { "deleted.user2": false }] }
             ]
         })
         .sort('-dateOfLastMessage')
@@ -25,17 +25,22 @@ router.get('/:userId', async (req, res) => {
 router.get('/:userId/:convId', async (req, res) => {
     //const conversation = await Conversation.findById(req.params.convId);
 
-    const conversation = await Conversation
-        .find({
-            _id: req.params.convId,
-        }, {
-            messages: { $slice: [ 0, 2 ] }
-        })
-        .sort({ "messages._id": 1 });
+    // get the last n  messages
+
+    var conversation = await Conversation
+        .find(
+            {
+                _id: req.params.convId,
+            },
+            {
+                messages: { $slice: -2, },
+            }
+        );
 
     if (!conversation) return res.status(404).send('The conversation with the given ID was not found.');
 
-    // remove deleted messages
+    console.log(conversation);
+    // TODO remove deleted messages. 
     // conversation.messages.forEach(message => {
     //     if (conversation.user1 == req.params.userId) {
     //         if (message.deleted.user1 == true) {
@@ -47,6 +52,7 @@ router.get('/:userId/:convId', async (req, res) => {
     //         }
     //     }
     // });
+
     res.send(conversation);
 });
 
