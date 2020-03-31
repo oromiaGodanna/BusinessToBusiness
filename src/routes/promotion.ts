@@ -73,8 +73,8 @@ router.post('/promotionEmail', async (req, res) => {
 
 router.post('/promotionSMS', async (req, res) => {
 
-    const accountSid = 'AC0b543878479732e7bff2182e204aaeee';
-    const authToken = '662d4e603dafd6543148b04624a06135';
+    const accountSid = process.env.TWILIO_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
     const client = require('twilio')(accountSid, authToken);
 
     client.messages
