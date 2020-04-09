@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/oromiaGodanna/BusinessToBusiness#readme",
   "dependencies": {
+    "@hapi/joi": "^17.1.1",
     "@types/mongoose": "^5.7.2",
     "express": "^4.17.1",
     "mongoose": "^5.9.2"

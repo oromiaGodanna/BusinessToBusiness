@@ -1,68 +1,60 @@
-const Joi = require('joi');
 const mongoose = require('mongoose');
+const Joi = require('joi');
+
+let shippingAddress = new Object();
 
 const Order = mongoose.model('Order', new mongoose.Schema({
-    orderId: {
-        type: String,
-        required: true,
-        minlength: 5,
-        maxlength: 50
-      },
+    
     buyerId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
-        minlength: 5,
-        maxlength: 50
     },
     sellerId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
-        minlength: 5,
-        maxlength: 50
     },
     prouctIds: {
-        type: Array,
+        type: [ mongoose.Schema.Types.ObjectId ],
         required: true,
-        minlength: 5,
-        maxlength: 50
     },
     amount: {
         type: Number,
         required: true,
-        minlength: 5,
-        maxlength: 50
     },
     price: {
         type: Number,
         required: true,
-        minlength: 5,
-        maxlength: 50
     },
     shippingAddress: {
-        type: String,
+        type: shippingAddress,
         required: true,
-        minlength: 5,
-        maxlength: 50
     },
     status: {
         type: String,
         required: true,
-        minlength: 5,
-        maxlength: 50
+        Enum: ['Waiting for confirmation', 'Order canceled', 'Order Declined', 'Waiting for initial payment', 'Waiting for shipment', 'Waiting for final payment', 'Waiting for delivery', 'Waiting for delivery confirmation', 'Delivered', 'Completed']
     },
     PaymentIds: {
-        type: Array,
+        type: [ mongoose.Schema.Types.ObjectId ],
         required: true,
-        minlength: 5,
-        maxlength: 50
     }
-    
-    
-
 }))
 
 function validateOrder(){
+    const schema = {
+        buyerId: Joi.objectId().required(),
+        sellerId: Joi.objectId().required(),
+        prouctIds: Joi.array().min(1).required(),
+        amount: Joi.Number().required().integer().min(1),
+        price: Joi.Number().required().positive(),
+        shippingAddress: Joi.required(),
+        status: Joi.String().required(),
+        PaymentIds: Joi.array().required().allow(null)
+        
+    };
 
+    return Joi.validate(Order, schema);
 }
 
 exports.Order = Order;
+exports.validate = validateOrder;
