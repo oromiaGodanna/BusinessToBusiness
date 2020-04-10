@@ -3,6 +3,7 @@ const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const customer = require('./routes/customer');
+const task = require('./routes/task');
 
 mongoose.connect('mongodb://localhost/b2b', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => { console.log('Connected to mongoDB...')})
@@ -12,6 +13,7 @@ mongoose.connect('mongodb://localhost/b2b', { useNewUrlParser: true, useUnifiedT
 app.use(bodyParser.json());
 //customer middlerware
 app.use('/customers', customer);
+app.use('/tasks', task);
 
 app.get("/", (req, res) => {
     res.send("Hello World!!!")
