@@ -7,14 +7,17 @@ const Rating = mongoose.model('Rating', new mongoose.Schema({
     productId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        ref: 'Product'
     },
     orderId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        ref: 'Order'
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        ref: 'Customer'
     },
     rating: {
         type: Number,
