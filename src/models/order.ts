@@ -57,4 +57,4 @@ function validateOrder(){
 }
 
 exports.Order = Order;
-exports.validate = validateOrder;
+exports.validateOrder = validateOrder;
