@@ -32,7 +32,7 @@ function validateRating(){
         productId: Joi.objectId().required(),
         orderId: Joi.objectId().required(),
         userId: Joi.objectId.required(),
-        rating: Joi.Number().required().integer().min(1).max(5)
+        rating: Joi.Number().integer().min(1).max(5).required()
         
         
     };
