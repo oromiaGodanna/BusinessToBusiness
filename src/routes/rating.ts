@@ -17,10 +17,10 @@ router.post('/addRating', async (req, res) => {
     const { error } = validateRating(req.body); 
     if (error) return res.status(400).send(error.details[0].message);
 
-    //when order is created each product with the order ID is added to rating collection
-    //same goes for review
+
     //maybe check if the product exsist
-    //const rating = await Rating.find({productId: req.body.productId});
+    //const product = await Product.find({productId: req.body.productId});
+    //if (!product) return res.status(400).send('Product doesn't exsist.');
 
     //check if user have a completed order for this product
     while( getOrderByID().status == "complete"){
@@ -34,27 +34,30 @@ router.post('/addRating', async (req, res) => {
               await rating.save();
               
               res.send(rating);
-        
-       
     }
-    
-    
-    
-  
 
-        
-            
-    
-    //update the rating of that product with the given value
-
-    // const { error } = validate(req.body); 
-    // if (error) return res.status(400).send(error.details[0].message);
-
-    // let genre = new Genre({ name: req.body.name });
-    // genre = await genre.save();
-
-    // res.send(genre);
 });
 
 
-//get rating
+
+router.get('/getRating:id', async (req, res) => {
+
+    //const rating = await Rating.find({productId: req.body.productId});
+    const rating = [{ "_id" : Object("5e36e646b07fe088bcb23c60"), "name" : "John", "age" : 21, "location" : "New York" },
+    { "_id" : Object("5e36e657b07fe088bcb23c62"), "name" : "John", "age" : 24, "location" : "Washington DC" },
+    { "_id" : Object("5e36e66bb07fe088bcb23c63"), "name" : "John", "age" : 21, "location" : "Detroit" },
+    { "_id" : Object("5e36e67bb07fe088bcb23c65"), "name" : "John", "age" : 29, "location" : "New York" }]
+    const count = rating.length;
+
+
+
+    for(let rating_value in rating){
+        
+    }
+
+    if (!rating) return 0;
+  
+    res.send(rating);
+
+
+});
