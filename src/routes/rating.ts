@@ -1,6 +1,5 @@
 export {};
 const {Rating, validateRating} = require('../models/rating');
-const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 
@@ -41,23 +40,20 @@ router.post('/addRating', async (req, res) => {
 
 
 router.get('/getRating:id', async (req, res) => {
+    //find ratings for a specific product
+    const allRatings = await Rating.find({productId: req.params.id})
+    if (!allRatings) return res.status(404).send('No rating for the given product.');
 
-    //const rating = await Rating.find({productId: req.body.productId});
-    const rating = [{ "_id" : Object("5e36e646b07fe088bcb23c60"), "name" : "John", "age" : 21, "location" : "New York" },
-    { "_id" : Object("5e36e657b07fe088bcb23c62"), "name" : "John", "age" : 24, "location" : "Washington DC" },
-    { "_id" : Object("5e36e66bb07fe088bcb23c63"), "name" : "John", "age" : 21, "location" : "Detroit" },
-    { "_id" : Object("5e36e67bb07fe088bcb23c65"), "name" : "John", "age" : 29, "location" : "New York" }]
-    const count = rating.length;
-
-
-
-    for(let rating_value in rating){
-        
+    //iterate through each and return total rating value
+    let rating = 0; let ratingsCount = allRatings.length;
+    for(let i of allRatings){
+        rating += i.rating;
     }
-
-    if (!rating) return 0;
-  
-    res.send(rating);
+    //find the average 
+    rating /= ratingsCount;
+    
+    res.send({rating});
 
 
 });
+module.exports = router;

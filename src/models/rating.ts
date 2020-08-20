@@ -23,8 +23,6 @@ const Rating = mongoose.model('Rating', new mongoose.Schema({
         type: Number,
         required: true,
     }
-    
-    
 }))
 
 function validateRating(){
@@ -40,5 +38,15 @@ function validateRating(){
     return Joi.validate(Rating, schema);
 }
 
+//  (async function(){
+//     const rating = new Rating({
+//         productId: '5d6ede6a0ba62570afcedd5a',
+//         orderId: '5d6ede6a0ba62570afcedd3b',
+//         userId: '5d6ede6a0ba62570afcedd3c',
+//         rating: 3,
+//      })
+// const result = await rating.save();
+// console.log(result)
+//  })()
 exports.Rating = Rating;
 exports.validateOrder = validateRating;
