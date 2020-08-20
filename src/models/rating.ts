@@ -1,7 +1,6 @@
 
 const mongoose = require('mongoose');
 const Joi = require('joi');
-
 const Rating = mongoose.model('Rating', new mongoose.Schema({
     
     productId: {
@@ -25,17 +24,16 @@ const Rating = mongoose.model('Rating', new mongoose.Schema({
     }
 }))
 
-function validateRating(){
-    const schema = {
+function validateRating(rating){
+    const schema = Joi.object({
         productId: Joi.objectId().required(),
         orderId: Joi.objectId().required(),
-        userId: Joi.objectId.required(),
-        rating: Joi.Number().integer().min(1).max(5).required()
+        userId: Joi.objectId().required(),
+        rating: Joi.number().integer().min(1).max(5).required()
         
-        
-    };
+    });
 
-    return Joi.validate(Rating, schema);
+    return  schema.validate(rating);
 }
 
 //  (async function(){
@@ -49,4 +47,4 @@ function validateRating(){
 // console.log(result)
 //  })()
 exports.Rating = Rating;
-exports.validateOrder = validateRating;
+exports.validateRating = validateRating;
