@@ -20,7 +20,7 @@ router.post('/addRating', async (req, res) => {
 
     let rating;
     //check if user have a completed order for this product
-    if( getOrderByID().status !== "complete"){
+    if( getOrderByID().status == "complete"){
             rating = new Rating({ 
                 productId: req.body.productId,
                 orderId: req.body.orderId,
@@ -37,7 +37,7 @@ router.post('/addRating', async (req, res) => {
 
 
 
-router.get('/getRating:id', async (req, res) => {
+router.get('/getRating/:id', async (req, res) => {
     //find ratings for a specific product
     const allRatings = await Rating.find({productId: req.params.id})
     if (!allRatings) return res.status(404).send('No rating for the given product.');

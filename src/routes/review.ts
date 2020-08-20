@@ -37,7 +37,7 @@ router.post('/addReview', async (req, res) => {
 
 
 
-router.get('/getReview:id', async (req, res) => {
+router.get('/getReview/:id', async (req, res) => {
     //find ratings for a specific product
     const review = await Review.find({productId: req.params.id})
     if (!review) return res.status(404).send('No rating for the given product.');
