@@ -7,6 +7,8 @@ Joi.objectId = require('joi-objectid')(Joi);
 
 
 const rating = require('./routes/rating')
+const review = require('./routes/review')
+
 
 mongoose.connect('mongodb://localhost/b2b', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => { console.log('Connected to mongoDB...')})
@@ -18,7 +20,7 @@ app.get("/", (req, res) => {
 
 app.use(express.json());
 app.use('/rating', rating);
-
+app.use('/review', review);
 
 
 const PORT = process.env.PORT || 3000;
