@@ -6,7 +6,8 @@ const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
 
 
-const order = require('./routes/order')
+const order = require('./routes/order');
+const payment = require('./routes/payment')
 
 
 
@@ -20,6 +21,8 @@ app.get("/", (req, res) => {
 
 app.use(express.json());
 app.use('/order', order);
+app.use('/payment', payment);
+
 
 
 const PORT = process.env.PORT || 3000;
