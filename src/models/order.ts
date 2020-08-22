@@ -34,7 +34,7 @@ const Order = mongoose.model('Order', new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        Enum: ['Waiting for confirmation', 'Order canceled', 'Order Declined', 'Waiting for initial payment', 'Waiting for shipment', 'Waiting for final payment', 'Waiting for delivery', 'Waiting for delivery confirmation', 'Delivered', 'Completed']
+        Enum: ['Waiting for confirmation', 'Order canceled', 'Order Declined', 'Waiting for initial payment', 'Waiting for shipment', 'Waiting for final payment', 'Waiting for delivery confirmation', 'Delivered', 'Completed']
     },
     paymentIds: {
         type: [ mongoose.Schema.Types.ObjectId ],
