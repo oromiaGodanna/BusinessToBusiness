@@ -30,4 +30,32 @@ router.post('/openDispute', async (req, res) => {
 
 });
 
+router.put('/cancelDispute/:id', async (req, res) => {
+    //find order for the given id and update status
+    const dispute = await Dispute.findByIdAndUpdate(req.params.id, 
+        {disputeStatus: "canceled"}, 
+        {new: true}, function(err, docs){
+            if(err){
+                console.log(err);
+            }
+        });
+    if (!dispute) return res.status(404).send('No dispute for the given order.');
+
+    res.send(dispute);
+});
+
+router.put('/closeDispute/:id', async (req, res) => {
+    //find order for the given id and update status
+    const dispute = await Dispute.findByIdAndUpdate(req.params.id, 
+        {"$set":  {disputeStatus: "setteled", disputeSettlement:req.body}}, 
+        {new: true}, function(err, docs){
+            if(err){
+                console.log(err);
+            }
+        });
+    if (!dispute) return res.status(404).send('No dispute for the given order.');
+
+    res.send(dispute);
+});
+
 module.exports = router;
