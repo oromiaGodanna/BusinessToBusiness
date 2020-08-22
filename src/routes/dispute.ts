@@ -1,5 +1,5 @@
 export {};
-const {Dispute, validateDispute} = require('../models/dispute');
+const {Dispute, validateDispute, validateSettlement} = require('../models/dispute');
 const express = require('express');
 const router = express.Router();
 
@@ -45,6 +45,10 @@ router.put('/cancelDispute/:id', async (req, res) => {
 });
 
 router.put('/closeDispute/:id', async (req, res) => {
+    //validate the settlement object
+    const {error} = validateSettlement(req.body)
+    if (error) return res.status(400).send(error.details[0].message);
+
     //find order for the given id and update status
     const dispute = await Dispute.findByIdAndUpdate(req.params.id, 
         {"$set":  {disputeStatus: "setteled", disputeSettlement:req.body}}, 

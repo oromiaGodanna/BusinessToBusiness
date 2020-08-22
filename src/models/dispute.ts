@@ -51,15 +51,24 @@ function validateDispute(dispute){
     const schema = Joi.object({
         orderId: Joi.objectId().required(),
         reason: Joi.string().required(),
-        refundAmount: Joi.number().integer().min(1).required(),
+        refundAmount: Joi.number().precision(2).min(1).strict().required(),
         description: Joi.string().required(),
         evidence: Joi.any().required(),
         disputeStatus: Joi.string().valid(...disputeStat).required(),
-        disputeSettlement: Joi.allow(null)
+        disputeSettlement: Joi.object().keys({
+            amount: Joi.number().precision(2).min(0).strict()
+        }).allow(null).required()
     });
 
     return schema.validate(dispute);
 }
+function validateSettlement(settlement){
+    const schema = Joi.object().keys({
+        amount: Joi.number().precision(2).min(0).strict()
+    }).allow(null).required();
+    return schema.validate(settlement);
+}
 
 exports.Dispute = Dispute;
 exports.validateDispute = validateDispute;
+exports.validateSettlement = validateSettlement;
