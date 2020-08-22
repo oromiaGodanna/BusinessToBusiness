@@ -1,3 +1,4 @@
+export {};
 const mongoose = require('mongoose');
 const Joi = require('joi');
 
@@ -15,24 +16,24 @@ const Payment = mongoose.model('Payment', new mongoose.Schema({
     },
     buyerStripeId:{
         type: String,
-        required: true
+        
     },
     sellerStripeId:{
         type: String,
-        required: true
+        
     },
     stripeObject: {
-        type: mongoose.Schema.Types.any,
+        type: mongoose.Schema.Types.Mixed,
         required: true,
     }
 },  { minimize: false }))
 
 function validatePayment(payment){
     const schema = Joi.object({
-        buyerId: Joi.objectId().required(),
+        orderId: Joi.objectId().required(),
         amountPaid: Joi.number().positive().precision(2).strict().required(),
-        buyerStripeId: Joi.String().required(),
-        sellerStripeId: Joi.String().required(),
+        buyerStripeId: Joi.string().allow('').required(),
+        sellerStripeId: Joi.string().allow('').required(),
         stripeObject: Joi.object().allow(null).required()
     });
 
