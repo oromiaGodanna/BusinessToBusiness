@@ -50,26 +50,12 @@ router.get('/', async(req, res)=>{
     }
 });
 
-//get tasks with a filte
-router.get('/search', async(req, res)=>{
+//get tasks with a filter
+router.get('/search/:filters', async(req, res)=>{
+    const filter = JSON.parse(req.params.filters);
     try{
-    const userType = req.body.userType;
-    const taskName = req.body.taskName;
-    var tasks;
-    if(userType == undefined && taskName == undefined){
-        tasks = await Task.find();
-    }else if(userType == undefined){
-        tasks = await Task.find({taskName: { $regex : new RegExp(taskName, "i" )}});
-    }else if(taskName == undefined){
-        tasks = await Task.find({userType: { $regex : new RegExp(userType, "i" )}});
-    }else{
-        tasks = await Task.find({
-        userType: { $regex: new RegExp(userType, "i")}, 
-        taskName: { $regex : new RegExp(taskName, "i" )}
-    });
-    }
-    if(!tasks) return res.json({status: 404, success: false, msg: 'Task with this Name can not be found'});
-    if(tasks.length == 0) return res.json({status: 200, success: true, msg: 'No tasks Exist with this filter'});
+        const tasks = await Task.find(filter);
+        if(tasks.length == 0) return res.json({status: 200, success: true, msg: 'No tasks Exist with this filter'});
         res.json({
             status: 200,
             success: true,
