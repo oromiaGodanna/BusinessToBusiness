@@ -2,12 +2,16 @@ import * as express from "express";
 const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+<<<<<<< HEAD
 //const config = require('config');
 require('dotenv').config();
 const error = require('./middleware/error');
 const customer = require('./routes/customer');
 const user = require('./routes/user');
 
+=======
+const subscription = require('./routes/subscription');
+>>>>>>> feature-subscription
 
 if(!process.env.jwtPrivateKey){
   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
@@ -18,6 +22,7 @@ mongoose.connect('mongodb://localhost/b2b', { useNewUrlParser: true, useUnifiedT
   .then(() => { console.log('Connected to mongoDB...')})
   .catch( err => console.error('Could not connect to mongoDB....'));
 
+<<<<<<< HEAD
 
 app.use(bodyParser.json());
 //middlerwares
@@ -25,6 +30,11 @@ app.use('/customer', customer);
 app.use('/user', user);
 
 app.use(error);
+=======
+app.use(bodyParser.json());
+app.use('/subscription', subscription);
+
+>>>>>>> feature-subscription
 
 app.get("/", (req, res) => {
     res.send("Hello World!!!")
