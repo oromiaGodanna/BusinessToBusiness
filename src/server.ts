@@ -2,9 +2,17 @@ import * as express from "express";
 const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+//const config = require('config');
+require('dotenv').config();
+const error = require('./middleware/error');
 const customer = require('./routes/customer');
-const task = require('./routes/task');
-const subscription = require('./routes/subscription');
+const user = require('./routes/user');
+
+
+if(!process.env.jwtPrivateKey){
+  console.error('FATAL ERROR: jwtPrivateKey is not defined.');
+  process.exit(1);
+}
 
 mongoose.connect('mongodb://localhost/b2b', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => { console.log('Connected to mongoDB...')})
@@ -13,9 +21,10 @@ mongoose.connect('mongodb://localhost/b2b', { useNewUrlParser: true, useUnifiedT
 
 app.use(bodyParser.json());
 //middlerwares
-app.use('/customers', customer);
-app.use('/tasks', task);
-app.use('/subscription', subscription);
+app.use('/customer', customer);
+app.use('/user', user);
+
+app.use(error);
 
 app.get("/", (req, res) => {
     res.send("Hello World!!!")
