@@ -16,6 +16,7 @@ router.post('/createPayment', async (req, res) => {
         sellerStripeId: req.body.sellerStripeId,
         stripeObject: req.body.stripeObject
     });
+    console.log(payment);
     payment = await payment.save();
     res.send(payment);
 
