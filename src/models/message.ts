@@ -15,47 +15,72 @@ const messageSchema = new mongoose.Schema({
     attachment: { type: Buffer },
     date: { type: Date, default: Date.now },
     deleted: {
-        type: new mongoose.Schema({
-            user1: { type: Boolean, default: false},
-            user2: { type: Boolean, default: false}
-        }),
-        default: {
-            user1: false,
-            user2: false
-        }
-    }
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Customer',
+        required: true,
+        default: []
+    },
+
 });
 
 const Message = mongoose.model('Message', messageSchema);
 
-const Conversation = mongoose.model('Conversation', new mongoose.Schema({
-    user1: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer',
-        required: true
-    },
-    user2: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Customer',
-        required: true
-    },
+
+const conversationSchema = new mongoose.Schema({
+    users: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Customer',
+            required: true
+        }
+    ],
     messages: { type: [messageSchema], default: [] },
     dateOfLastMessage: { type: Date, default: Date.now },
     deleted: {
-        type: new mongoose.Schema({
-            user1: { type: Boolean, default: false},
-            user2: { type: Boolean, default: false}
-        }),
-        default: { user1: false, user2: false}
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Customer',
+        required: true,
+        default: []
+    },
+    tracking: [
+        {
+            _id: false,
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Customer',
+                required: true
+            },
+            lastTime: {
+                type: Date,
+                required: true
+            }
+        }
+    ]
+});
+
+conversationSchema.methods.getUndeletedMessages = function (userId: string) {
+    for (let index = this.messages.length - 1; index >= 0; --index) {
+
+        let msg = this.messages[index];
+
+        // console.log("userID is: " + userId);
+        if (msg.deleted.includes(userId)) {
+            // console.log("msg.deleted contains userId");
+            let index = this.messages.indexOf(msg);
+            this.messages.splice(index, 1);
+        }
     }
-}));
+
+    return this;
+}
+
+const Conversation = mongoose.model('Conversation', conversationSchema);
 
 
 
 function validateMessage(message) {
 
     const schema = {
-        // sender: Joi.objectId().required(),
         message: Joi.string().required(),
         product: Joi.objectId(),
         //attachment: Joi.blob(),
@@ -67,8 +92,7 @@ function validateMessage(message) {
 function validateConversation(conversation) {
 
     const schema = {
-        // user1: Joi.objectId().required(),
-        user2: Joi.objectId().required(),
+        users: Joi.array().items(Joi.objectId()).length(2).required(),
         messages: Joi.array(),
     };
 

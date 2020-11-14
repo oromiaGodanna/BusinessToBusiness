@@ -32,14 +32,20 @@ var SysNotification = mongoose.model('SysNotification', new mongoose.Schema({
     externalModelType: {
         type: String, 
         required: true,
-        enum: ['Promotion', 'Order', 'Performa']
+        enum: ['Customer', 'Order', 'Performa']   // for promotion we link back to profile page of business so Customer
     },
-    viewed: { type: Boolean, default: false },
-    sender: {
-        type: mongoose.Schema.Types.ObjectId,
+    // viewed: { type: Boolean, default: false },
+    viewed: {
+        type: [mongoose.Schema.Types.ObjectId],
         ref: 'Customer',
-        required: true
+        required: true,
+        default: []
     },
+    // sender: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Customer',
+    //     required: true
+    // },
 
 }));
 
@@ -53,7 +59,7 @@ function validateSysNotification(sysNotification) {
         title: Joi.string().required(),
         content: Joi.string().required(),
         target: Joi.objectId().required(),
-        externalModelType: Joi.string().valid('Performa', 'Promotion', 'Order').required()
+        externalModelType: Joi.string().valid('Performa', 'Customer', 'Order').required()
     };
 
     return Joi.validate(sysNotification, schema);

@@ -1,5 +1,6 @@
 export { };
 
+
 require('dotenv').config();
 const express = require('express');
 var Joi = require('joi');
@@ -7,17 +8,28 @@ Joi.objectId = require('joi-objectid')(Joi);
 // Joi = Joi.extend(require('joi-phone-number'));
 const Fawn = require('fawn');
 const error = require('./middleware/error');
+const { authSocket } = require('./middleware/auth');
 require('express-async-errors');
 const winston = require('winston');
 // require('winston-mongodb');
 const config = require('config');
 
-const message = require('./routes/message');
+const socket = require('socket.io');
+
+
+const { message, unreadCount, sendMessage, joinConversations } = require('./routes/message');
+// const message = require('./routes/message');
 const promotion = require('./routes/promotion');
-const notification = require('./routes/notification');
+const { notification } = require('./routes/notification');
 const customer = require('./routes/customer');
 const auth = require('./routes/auth');
 const mongoose = require('mongoose');
+
+
+// sockets
+const MessageSocket = require('./realtime/messageSocket');
+const NotificationSocket = require('./realtime/notificationSocket');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -48,8 +60,8 @@ const port = process.env.PORT || 3000;
 
 // Allowing cross-origin sites to make requests to this API
 app.use((req, res, next) => {
-  res.append('Access-Control-Allow-Origin' , 'http://localhost:4200');
-  res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.append('Access-Control-Allow-Origin', 'http://localhost:4200');
+  res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.append("Access-Control-Allow-Headers", "x-auth-token,Origin, Accept,Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
   res.append('Access-Control-Allow-Credentials', true);
   next();
@@ -57,7 +69,7 @@ app.use((req, res, next) => {
 
 mongoose.connect(config.get('db'), { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
   .then(() => { console.log(`Connected to mongoDB: ${config.get('db')}...`) })
-  .catch(err => console.error('Could not connect to mongoDB....'));
+  .catch(err => console.error('Could not connect to mongoDB....', err));
 
 
 Fawn.init(mongoose);
@@ -79,6 +91,51 @@ app.use(error);
 const server = app.listen(port, () => {
   return console.log(`server is listening on ${port}...`);
 });
+
+
+
+
+const io = socket(server);
+
+
+io
+  .use(authSocket)
+  .on('connection', async (socket) => {
+
+
+    socket.emit('im connected');
+    // let count = await unreadCount(socket);
+    // console.log(count);
+    // socket.emit('unreadCount', count);
+
+    // join conversations of user
+    await joinConversations(socket);
+
+    // User has to also join promotion, order and performa
+
+    // socket joins a room identified by user id
+    socket.join(socket.user._id);
+
+
+
+    // Create event handlers for this socket
+    var eventHandlers = {
+      message: new MessageSocket(io, socket),
+      notification: new NotificationSocket(io, socket),
+    };
+
+    // Bind events to handlers
+    for (var category in eventHandlers) {
+      var handler = eventHandlers[category].handler;
+      for (var event in handler) {
+        socket.on(event, handler[event]);
+      }
+    }
+
+
+  });
+
+
 
 
 module.exports = server;

@@ -8,7 +8,7 @@ const { emailVerificationTemplate,
 const { validateEmailVerification,
     validatePromotionEmail,
     validatePromotion, Promotion, Email, Sms, validateSms } = require('../models/promotion');
-const auth = require('../middleware/auth');
+const {auth} = require('../middleware/auth');
 
 
 // send email to verify user email
