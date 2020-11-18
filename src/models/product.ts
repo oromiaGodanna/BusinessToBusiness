@@ -1,5 +1,3 @@
-import { ObjectID } from "bson";
-
 var mongoose = require('mongoose');
 var Joi = require('joi');
 var Schema = mongoose.Schema;
@@ -8,38 +6,48 @@ var additionalProductInfo = new Object;
 // add constraints 
 var filterSchema = new Schema({
     productCategory:{type:String},
-    productSubCategory:{type:String},
-    minProductPrice:{type:String},
-    maxProductPrice:{type:String},
+    productSubCategory:{type:String,default:null},
+    maxProductPrice:{type:Number},
     
 });
 const productSchema = new Schema({
     userId : {type:String, required: true},
-    specialOfferId:{type:String,default:null},
-    productName:{type:String,required:true},
+    specialOfferId:{type:Schema.Types.ObjectId,default:null},
+    productName:{type:String,required:true,minlength: 2,maxlength: 100},
     productCategory:{type:String,required:true},
-    productSubCategory:{type:String},
-    description:{type:String},
-    minOrder:{type:Number},
-    price:{type:Number},
-    keyword:{type:[String],required:true},
+    productSubCategory:{type:String,default:null},
+    description:{type:String,default:null},
+    minOrder:{type:Number,minlength:1},
+    price:{type:Number,required:true},
+    measurement:{type:String,default:null},
+    keyword:{type:[String],default:null},
     images:[String],
-    additionalProductInfo:{type:additionalProductInfo,required:true},
+    additionalProductInfo:{type:additionalProductInfo,default:null},
+    //availablility:{type:Boolean,default:true},
+    deleted:{type:Boolean,default:false},
     createDate:{type:Date,default: Date.now()},
 });
 
-function validateProduct(product) {
+function validateProducts(product) {
 
     const productS = {
-        productName: Joi.string().required(),
+        productName: Joi.string().required().max(150),
         productCategory:Joi.string().required(),
-        productPrice:Joi.number().required()
+        productSubCategory: Joi.string().allow(null, ''),
+        description: Joi.string().allow(null, ''),
+        minOrder: Joi.number().min(1).optional(),
+        price: Joi.number().required().min(1),
+        keyword:Joi.array().items(Joi.string().allow(null, '')),
+        images:Joi.array().items(Joi.string()),
+        additionalProductInfo:Joi.allow(null, ''),
+        measurement: Joi.string().allow(null, ''),
+        
     };
 
         
-    return Joi.validate(validateProduct, productS);
+    return Joi.validate(product, productS);
 }
 
-module.exports = mongoose.model("Product", productSchema);
-module.exports = mongoose.model("Filter", filterSchema);
-exports.validateProduct = validateProduct;
+exports.Product = mongoose.model("Product", productSchema);
+exports.Filter = mongoose.model("Filter", filterSchema);
+exports.validateProduct = validateProducts;
