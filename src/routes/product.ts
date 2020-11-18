@@ -1,11 +1,29 @@
-import { ObjectId } from "bson";
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const Product = require('../models/product');
+const { Product, Filter, validateProduct } = require('../models/product');
 //const User = require('../models/User');
 //const Order = require('../models/order');
-const mongoose = require('mongoose');
+const multer = require('multer');
+var imageNames = [];
+
+const storage = multer.diskStorage({
+  destination: (req, file, callBack) => {
+      callBack(null, '../b2b/bTob/src/assets/images/productImages')
+  },
+  filename: (req, file, callBack) => {
+      var d = new Date();
+      var nameImage =`${file.originalname}`;
+      var imageName = d.getTime() + '_' + nameImage;
+      callBack(null, imageName);
+      imageNames.push(imageName);
+      console.log(imageNames)
+  }
+})
+
+const upload = multer({ storage: storage })
+ 
+
 
 router.use(bodyParser.json());
 
@@ -38,10 +56,21 @@ router.use(function (req, res, next) {
   }
 });
 
-router.post("/createProduct", function (req, res) {
+router.post('/file', upload.array('file'), (req, res, next) => {
+  const file = req.file;
+  console.log(file.filename);
+  if (!file) {
+    const error = new Error('No File')
+   // error.httpStatusCode = 400
+    return next(error)
+  }
+    res.send(file);
+})
+
+router.post("/createProduct", upload.array('images'), async function (req, res) {
   var product = Product();
   product.userId = req.token.userId;
-  product.productName = req.body.productName;
+  /*product.productName = req.body.productName;
   product.productCategory = req.body.productCategory;
   product.productSubCategory = req.body.productSubCategory;
   product.description = req.body.description;
@@ -51,7 +80,23 @@ router.post("/createProduct", function (req, res) {
   product.images = req.body.images;
   product.additionalProductInfo = req.body.additionalProductInfo;
   product.createDate = req.body.createDate;
+  const image = req.body.image;
+  console.log(image);*/
 
+  product.productName = req.body.productName;
+  product.productCategory = req.body.productCategory;
+  product.productSubCategory = req.body.productSubCategory;
+  product.description = req.body.description;
+  product.minOrder = req.body.minOrder;
+  product.price = req.body.price;
+  product.keyword = req.body.keyword;
+  product.measurement = req.body.measurement;
+  product.images = imageNames;
+  product.additionalProductInfo = req.body.additionalProductInfo;
+  product.createDate = req.body.createDate;
+  //const images = req.images;
+  //console.log(this.images);
+  imageNames=[];
   if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
     res.json({
       sucess: false,
@@ -59,25 +104,25 @@ router.post("/createProduct", function (req, res) {
     });
 
   } else {
+    const { error } = validateProduct(req.body);
+    if (error) {
+      return res.status(400).send(error.details[0].message);
 
-    if (req.body.productName == null || req.body.productCategory == null || req.body.price == null || req.body.productName == "" || req.body.productCategory == "" || req.body.productCategory == "") {
-      res.json({
-        sucess: false,
-        message: "Ensure all fields are provided"
-      });
     } else {
-      product.save(function (err) {
+
+      await product.save(async function (err, productCreated) {
         if (err) {
           res.json({ sucess: false, message: err });
         } else {
-          res.json({ sucess: true, message: "product added" });
+          res.json({ sucess: true, message: "product added" + productCreated });
         }
       });
+
     }
   }
 });
 
-router.post("/updateProduct/:id", function (req, res) {
+router.post("/updateProduct/:id", async function (req, res) {
 
   const tok = req.token.userId;
   if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("seller"))) {
@@ -88,41 +133,44 @@ router.post("/updateProduct/:id", function (req, res) {
 
   } else {
 
-    if (req.body.productName == null || req.body.productCategory == null || req.body.productCategory == null || req.body.productName == "" || req.body.productCategory == "" || req.body.productCategory == "") {
-      res.json({
-        sucess: false,
-        message: "Ensure all fields are provided"
-      });
+    const { error } = validateProduct(req.body);
+   console.log(req.body.productName);
+   console.log(req.productName);
+    console.log(req.body.minOrder);
+    if (error) {
+      return res.status(400).send(error.details[0].message);
+
     } else {
       //console.log(tok);
-      Product.findOne({ _id: req.params.id }, function (err, product) {
+      await Product.findOne({ _id: req.params.id }, async function (err, product) {
         if (err) {
           throw err;
-  
-        }else if(product == null){
+
+        } else if (product == null) {
           res.json({ sucess: true, message: "product not found" });
-  
+
         } else if (product.userId != tok) {
           //console.log(tok);
           res.send("you cannot update the product");
-  
+
         } else {
 
-          Product.updateOne({ _id: req.params.id }, {
+          await Product.updateOne({ _id: req.params.id }, {
             $set: {
 
               productName: req.body.productName,
               productCategory: req.body.productCategory,
               productSubCategory: req.body.productSubCategory,
               description: req.body.description,
-              minorder: req.body.minOrder,
+              measurement: req.body.measurement,
+              minOrder: req.body.minOrder,
               price: req.body.price,
               keyword: req.body.keyword,
               images: req.body.images,
               additionalProductInfo: req.body.additionalProductInfo
 
             }
-          }, function (err, productD) {
+          }, async function (err, productD) {
             if (err) {
               res.json({ sucess: false, message: err });
             } else {
@@ -135,16 +183,27 @@ router.post("/updateProduct/:id", function (req, res) {
     }
   }
 });
+//////
+router.get("/getProducts/:offset/:limit", async function (req, res) {
+  var offset = Number(req.params.offset);
+   var limit = Number(req.params.limit);
+  await Product.find({ specialOfferId: null,deleted:false}, async function (err, products) {
+    if (err) throw err;
+    res.send(products);
+  }).sort('createDate').skip(offset).limit(limit);
+});
 
-router.get("/getProducts", function (req, res) {
-  Product.find({specialOfferId:null}, function (err, products) {
+router.get("/getAllProducts", async function (req, res) {
+  
+  await Product.find({ specialOfferId: null,deleted:false}, async function (err, products) {
     if (err) throw err;
     res.send(products);
   }).sort('createDate');
 });
 
-router.get("/getProduct/:id", function (req, res) {
-  Product.findOne({ _id: req.params.id }, function (err, product) {
+
+router.get("/getProduct/:id", async function (req, res) {
+  Product.findOne({ _id: req.params.id,deleted:false }, async function (err, product) {
     if (err) {
       throw err;
     } else if (product == null) {
@@ -156,7 +215,22 @@ router.get("/getProduct/:id", function (req, res) {
   });
 });
 
-router.get("/getProductSeller/:userId", function (req, res) {
+router.post("/getProducts", async function (req, res) {
+  var productIds = req.body.productIds;
+  await Product.find({ _id: { $in: productIds },deleted:false}, async function (err, product) {
+    if (err) {
+      throw err;
+    } else if (product == null) {
+      res.send("product not found");
+    } else {
+      res.send(product);
+    }
+
+  });
+});
+
+
+router.get("/getProductSeller/:userId", async function (req, res) {
 
   if (req.token.userId.localeCompare(req.params.userId) || (req.token.userType.localeCompare("seller"))) {
     res.json({
@@ -165,7 +239,7 @@ router.get("/getProductSeller/:userId", function (req, res) {
     });
 
   } else {
-    Product.find({ userId: req.params.userId }, function (err, product) {
+    await Product.find({ userId: req.params.userId,deleted:false }, async function (err, product) {
       if (err) {
         throw err;
       } else if (product == null) {
@@ -176,34 +250,97 @@ router.get("/getProductSeller/:userId", function (req, res) {
   }
 });
 
-router.get("/deleteProduct/:id", function (req, res) {
+router.get("/getAllRelatedProductByCategory/:productCategory", async function (req, res) {
+  
+    await Product.find({ productCategory: req.params.productCategory,deleted:false,specialOfferId:null}, async function (err, product) {
+      if (err) {
+        throw err;
+      } else{
+        res.send(product);
+      }
+    });
+ 
+});
 
-  if ((req.token.userId=="" || null) || (req.token.userType.localeCompare("seller"))) {
+router.get("/getRelatedProductByCategory/:productCategory/:offset/:limit", async function (req, res) {
+  var offset = Number(req.params.offset);
+  var limit = Number(req.params.limit);
+  await Product.find({ productCategory: req.params.productCategory,deleted:false,specialOfferId:null}, async function (err, product) {
+    if (err) {
+      throw err;
+    } else{
+      res.send(product);
+    }
+  }).sort('createDate').skip(offset).limit(limit);
+
+});
+
+router.get("/getAllRelatedProductBySubCategory/:productSubCategory", async function (req, res) {
+  
+  await Product.find({ productSubCategory: req.params.productSubCategory,deleted:false,specialOfferId:null}, async function (err, product) {
+    if (err) {
+      throw err;
+    } else{
+      res.send(product);
+    }
+  });
+
+});
+
+router.get("/getRelatedProductBySubCategory/:productSubCategory/:offset/:limit", async function (req, res) {
+  var offset = Number(req.params.offset);
+  var limit = Number(req.params.limit);
+  await Product.find({ productSubCategory: req.params.productSubCategory,deleted:false,specialOfferId:null}, async function (err, product) {
+    if (err) {
+      throw err;
+    } else{
+      res.send(product);
+    }
+  }).sort('createDate').skip(offset).limit(limit);
+
+});
+
+
+router.delete("/deleteProduct/:id", async function (req, res) {
+  const tok = req.token.userId;
+  if ((req.token.userId == "" || null) || (req.token.userType.localeCompare("seller"))) {
     res.json({
-      sucess: false,
+      success: false,
       message: "You must to login to delete the product and you must be the product's seller"
     });
 
   } else {
-    Product.findOne({ _id: req.params.id }, function (err, product) {
+    await Product.findOne({ _id: req.params.id }, async function (err, product) {
       if (err) {
         throw err;
 
-      }else if(product == null){
-        res.json({ sucess: true, message: "product not found" });
+      } else if (product == null) {
+        res.json({ success: true, message: "product not found" });
 
-      } else if (product.userId != req.token.userId) {
+      } else if (product.userId != tok) {
         console.log(req.token.userId);
         res.send("you cannot delete the product");
 
       } else {
-        Product.deleteOne({ _id: req.params.id }, function (err, ret) {
-          if (err) {
-            res.json({ sucess: false, message: err });
-          } else {
-            res.json({ sucess: true, message: "product deleted" });
+        await Product.updateOne({ _id: req.params.id }, {
+          $set: {
+            deleted: true,
           }
-        });
+        }, async function (err, productD) {
+          if (err) {
+            res.json({ success: false, message: err });
+          } else {
+            res.json({ success: true, message: "product deleted" });
+          }
+        })
+       /* await Product.deleteOne({ _id: req.params.id }, async function (err, ret) {
+          if (err) {
+            res.json({ success: false, message: err });
+          } else {
+            res.json({ success: true, message: "product deleted" });
+          }
+        });*/
+
         //res.redirect("/products");  
       }
     })
@@ -213,35 +350,45 @@ router.get("/deleteProduct/:id", function (req, res) {
 
 
 //filter product based on given criteria
-router.post("/search", function (req, res) {
-  if (req.body.productCategory = "all" && (req.body.productSubCategory = "all") && (req.body.maxProductPrice = null)) {
-    Product.find({}, function (err, products) {
-      if (err) throw err;
-      res.send(products);
-    }).sort({ createDate: -1 });
-  } else {
+router.post("/filter/:offset/:limit", async function (req, res) {
+   var offset = Number(req.params.offset);
+   var limit = Number(req.params.limit);
+   var productCategory = req.body.productCategory;
+   //console.log(productCategory);
+   var productSubCategory = req.body.productSubCategory;
+   //console.log(productSubCategory);
+   var maxPrice = parseFloat(req.body.maxPrice);
+    //console.log(maxPrice);
     
-  Product.find({ }, function (err, products) {
-    //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
-    if (err) throw err;
-    res.send(products);
-  }).sort({ createDate: -1 });
-
-    /*Product.find({ $and: [{ productCategory: req.body.productCategory }, { productSubCategory: req.body.productSubCategory }, { price: { $lte: req.body.maxProductPrice } }] }, function (err, products) {
+    await Product.find({
+      $and:[{ productCategory:productCategory},
+      {productSubCategory:productSubCategory},
+      {price: { $lt: maxPrice }},
+      {deleted:false}]}, async function (err, products) {
       if (err) throw err;
-      res.send(products);
-    }).sort({ createDate: -1 });*/
-  }
+        res.send(products);
+    }).sort('createDate').skip(offset).limit(limit);
+
+  
+
 });
 
-router.post("/searchData", function (req, res) {
+router.get("/search/:searchWord/:offset/:limit", async function (req, res) {
+  var offset = Number(req.params.offset);
+  var limit = Number(req.params.limit);
+  await Product.find(
+    {
+      $or: [{ productName: req.params.searchWord },
+      { keyword: { $in: req.params.searchWord } },
+      { description: req.params.searchWord },
+      { productCategory: req.params.searchWord },
+      { productSubCategory: req.params.searchWord }]
+    }, async function (err, products) {
+      //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
 
-  Product.find({ $or: [{ productName: req.body.filter }, { keyword: { $in: req.body.filter } }, { description: req.body.filter }, { productCategory: req.body.filter }, { productSubCategory: req.body.filter }] }, function (err, products) {
-    //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
-
-    if (err) throw err;
-    res.send(products);
-  });
+      if (err) throw err;
+      res.send(products);
+    }).sort('createDate').skip(offset).limit(limit);
 });
 
 module.exports = router;
