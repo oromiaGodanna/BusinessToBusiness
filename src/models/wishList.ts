@@ -1,11 +1,22 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Joi = require('joi');
 
 var wishlistSchema = new Schema({
-    productIds: {type: [String]},
+    productIds: {type: [String],required:true},
     
 });
 
+function validateWishListProduct(product) {
 
+    const wLProductS = {
+        productIds: Joi.array().items(Joi.string()).required(),
+      
+    };
 
-module.exports = mongoose.model("Wishlist", wishlistSchema);
+        
+    return Joi.validate(product, wLProductS);
+}
+
+exports.WishList = mongoose.model("WishList", wishlistSchema);
+exports.validateWishListProduct = validateWishListProduct;

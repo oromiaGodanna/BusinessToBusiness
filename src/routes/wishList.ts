@@ -1,10 +1,11 @@
-import { ObjectId } from "bson";
-import { userInfo } from "os";
+import { count } from "console";
+
+export { };
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const Product = require('../models/product');
-const WishList = require('../models/wishList');
+var {Product} = require('../models/product');
+var {WishList,validateWishListProduct} = require('../models/wishList');
 //const User = require('../models/User');
 //const mongoose = require('mongoose');
 
@@ -13,7 +14,7 @@ router.use(bodyParser.json());
 router.use(function (req, res, next) {
   var token = {
     userId: "user121413",
-    wishListId: "5e7743e73238d205bc571562",
+    wishListId: "5fb16e5e53aee62d343fde60",
   };
         /*
             var token = req.body.token || req.body.query || req.headers['x-access-token'];
@@ -39,38 +40,46 @@ router.use(function (req, res, next) {
   }
 });
 
-router.post("/addToWishList", function (req, res) {
+router.post("/addToWishList", async function (req, res) {
   var wishList = WishList();
   // wishList.wishListId = req.token.wishListId;
   wishList.productIds = req.body.productIds;
 
   if (req.token.userId == "" || req.token.userId == null) {
     res.json({
-      sucess: false,
+      success: false,
       message: "you must log in"
     });
   } else {
-    Product.findOne({ _id: req.body.productIds }, function (err, productExist) {
+
+    const { error } = validateWishListProduct(req.body);
+    if (error) {
+      return res.status(400).send(error.details[0].message);
+
+    } else {
+
+    await Product.findOne({ _id: req.body.productIds }, async function (err, productExist) {
       if (err) {
         throw err;
       }
       else if (productExist == null) {
         res.json({
-          sucess: false,
+          success: false,
+          type:false,
           message: "Sorry,The product you wish to add to wishlist doesnot exist"
         });
       } else {
 
-        WishList.findOne({ _id: req.token.wishListId }, function (err, wishL) {
+       await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishL) {
           if (err) {
             throw err;
           }
           //res.send(wishList);
           else if (wishL == null) {
-            console.log(wishL);
-            wishList.save(function (err, createdWishList) {
+           
+           await wishList.save(function (err, createdWishList) {
               if (err) {
-                res.json({ sucess: false, message: err });
+                res.json({ success: false,type:false,message: err });
               } else {
                 /* User.updateOne({_id:req.token.userId},{$set:{wishListId:createdWishList._id}},function(err,User){
              if(err){
@@ -79,21 +88,25 @@ router.post("/addToWishList", function (req, res) {
               //update token too.
              }
            });*/
-                res.json({ sucess: true, message: "product added to wishlist " + createdWishList });
+               // res.json({ sucess: true, message: "product added to wishlist " + createdWishList });
+               res.json({ success: true,type:true,message: 'product added to wishlist' });
               }
             });
           } else {
 
             if (wishL.productIds.includes(req.body.productIds)) {
 
-              res.json({ sucess: true, message: "product already added to wishlist" });
+              res.json({ success: true,type:false, message: "product already added to wishlist" });
             } else {
 
-              WishList.updateOne({ _id: req.token.wishListId }, { $addToSet: { productIds: req.body.productIds } }, function (err, w) {
+             await WishList.updateOne(
+               { _id: req.token.wishListId }, 
+               { $addToSet: { productIds: req.body.productIds } 
+              }, async function (err, w) {
                 if (err) {
-                  res.json({ sucess: false, message: err });
+                  res.json({ success: false,type:false, message: err });
                 } else {
-                  res.json({ sucess: true, message: "product added to wishlist" });
+                  res.json({ success: true,type:true, message: "product added to wishlist" });
                 }
                 //res.redirect("/products");
               });
@@ -103,17 +116,31 @@ router.post("/addToWishList", function (req, res) {
       }
     });
   }
+  }
 });
 
-
-router.get("/getWishList", function (req, res) {
+/*router.get("/getWishLists", async function (req, res) {
   if (req.token.userId == "" || req.token.userId == null) {
     res.json({
       sucess: false,
       message: "you must log in"
     });
   } else {
-    WishList.findOne({ _id: req.token.wishListId }, function (err, wishListD) {
+    await WishList.find({}, async function (err, wishListD) {
+      res.send(wishListD);
+    });
+  }
+});*/
+
+router.get("/getWishList", async function (req, res) {
+  if (req.token.userId == "" || req.token.userId == null) {
+    res.json({
+      sucess: false,
+      message: "you must log in"
+    });
+  } else {
+   
+    await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishListD) {
       if (err) {
         throw err;
       } else if (wishListD == null) {
@@ -128,7 +155,7 @@ router.get("/getWishList", function (req, res) {
             productArray.push(wishListD.productIds[i]);
           }
 
-          Product.find({ _id: { $in: productArray } }, function (err, product) {
+          await Product.find({ _id: { $in: productArray } }, async function (err, product) {
             if (err) {
               throw err;
             } else if (product == null) {
@@ -146,7 +173,7 @@ router.get("/getWishList", function (req, res) {
   }
 });
 
-router.get("/removeFromWishList/:id", function (req, res) {
+router.delete("/removeFromWishList/:id", async function (req, res) {
 
   if (req.token.userId == "" || req.token.userId == null) {
     res.json({
@@ -154,13 +181,13 @@ router.get("/removeFromWishList/:id", function (req, res) {
       message: "you must log in"
     });
   } else {
-    WishList.findOne({ _id: req.token.wishListId }, function (err, wishL) {
+    await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishL) {
       if (err) {
         throw err;
       }else if(req.token.wishListId != wishL._id){
         res.send("you cannot delete product from wishlist");
       }else{
-      WishList.updateOne({ _id: req.token.wishListId }, { $pull: { productIds: { $in: req.params.id } } }, function (err, product) {
+      await WishList.updateOne({ _id: req.token.wishListId }, { $pull: { productIds: { $in: req.params.id } } }, async function (err, product) {
         if (err) {
           res.json({ sucess: false, message: err });
         } else {
@@ -172,6 +199,36 @@ router.get("/removeFromWishList/:id", function (req, res) {
     })
   }
 });
+
+router.get("/countProductInWishlist", async function (req, res) {
+
+  if (req.token.userId == "" || req.token.userId == null) {
+    res.json({
+      sucess: false,
+      message: "you must log in"
+    });
+  } else {
+    await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishL) {
+      if (err) {
+        throw err;
+      }else if(wishL == null){
+        res.send(String(0));
+      }else{
+        if(wishL != null){
+          var products=wishL.productIds;
+          var countProducts = products.length;
+          //console.log(countProducts);
+          res.send(String(countProducts));
+        }else{
+          //console.log(0);
+          res.send(String(0));
+        }
+       
+    }
+    })
+  }
+});
+
 
 
 module.exports = router;
