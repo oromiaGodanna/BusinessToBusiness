@@ -9,21 +9,24 @@ const subscriptionSchema = new Schema({
         required: [true, 'Please Enter the name for the subscription'],
         unique: true
     },
-    numOfPRoducts: {
+    description: {
+        type: String,
+    },
+    numOfProducts: {
         type: Number,
     },
     numOfQuatations: {
         type: Number
     },
-    numOfEmail: {
+    numOfEmails: {
         type: Number
     },
     monthlyPrice: {
         type: Number
     }, 
-    // available: {
+    // availableOn: {
     //     type: Boolean || Date,
-    //     default: true || Date.now
+    //     default: true || new Date()
     // }
 });
 
@@ -32,12 +35,14 @@ module.exports = Subscription;
 
 module.exports.validateSubscription = function(subscription){
     const schema = {
-        name: Joi.string().alphanum().required(),
+        name: Joi.string().required(),
+        description: Joi.string(),
         numOfProducts: Joi.number().integer(),
         numOfQuatations: Joi.number().integer(),
-        numOfEmail : Joi.number().integer(),
+        numOfEmails : Joi.number().integer(),
         monthlyPrice: Joi.number(),
-        //available: Joi.Boolean(),
+        rate: Joi.number().integer(),
+        // available: Joi.alternatives().try(Joi.Boolean(),Joi.Date())
 
     };
     return Joi.validate(subscription, schema)

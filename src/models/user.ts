@@ -33,7 +33,7 @@ var userSchema = new Schema({
     },
     registeredDate: {
         type: Date,
-        default: moment().format('YYYY-MM-DD'),
+        default: new Date()
     }
 });
 
@@ -62,14 +62,15 @@ const Admin = mongoose.model('Admin', adminSchema);
 //password: PasswordComplexity(complexityOptions).required();
 
 const joiUser = Joi.object({
-    email: Joi.string().trim().email().when('verified', {is: false, then: Joi.optional(), otherwise: Joi.required()}),
+    email: Joi.string().trim().email().lowercase().when('verified', {is: false, then: Joi.optional(), otherwise: Joi.required()}),
     verified: Joi.boolean().default(false),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
     userType: Joi.string().valid('Admin', 'Buyer', 'Seller', 'Both').default('Admin'),
-    password: new PasswordComplexity({
-        min: 8, max: 25, lowerCase: 1, upperCase: 1, numeric: 1, symbol: 1, requirementCount: 4}).when('verified', {is: false, then: Joi.optional(), otherwise: Joi.required()}),
-    registeredDate: Joi.date().default(moment().format('YYYY-MM-DD')),
+    password: Joi.string().regex(new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$")).when('verified', {is: false, then: Joi.optional(), otherwise: Joi.required()}),
+    // password: new PasswordComplexity({
+    //     min: 8, max: 25, lowerCase: 1, upperCase: 1, numeric: 1, requirementCount: 3}).when('verified', {is: false, then: Joi.optional(), otherwise: Joi.required()}),
+    //registeredDate: Joi.date().default(moment().format('MMM DD YYYY')),
 });
 
 
@@ -89,7 +90,7 @@ module.exports.validateAdmin = function(admin){
 
 module.exports.validateLoginInfo = function(info){
     const loginInfo = Joi.object({
-        email: Joi.string().trim().email().required(),
+        email: Joi.string().trim().email().lowercase().required(),
         password: Joi.string().required()
 });
         return loginInfo.validate(info);
@@ -107,26 +108,25 @@ module.exports.generateAuthToken = function(user){
         return token;
 };
 
-
 const transport = nodemailer.createTransport(nodemailerSendgrid({
     apiKey: process.env.sendGridApiKey
 }));
  
 module.exports.sendConfirmationEmail = function(user){
-    console.log('confirmation Email');
     const token = jwt.sign(
         {_id: user.id,  
         email: user.email, 
         },process.env.jwtPrivateKey);
 
-        const url = `localhost:3000/customer/confirmation/${token}`
+        const url = `localhost:3000/customer/email_confirmation/${token}`
       
-        return transport.sendMail({
-        from: 'Tamenemihret@gmail.com',
-        to: `${user.firstName} <${user.email}>`,
-        subject: 'Confirmation Email',
-        html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
-    });
+    //     return transport.sendMail({
+    //     from: 'Tamenemihret@gmail.com',
+    //     to: `${user.firstName} <${user.email}>`,
+    //     subject: 'Confirmation Email',
+    //     html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
+    // });
+    return token;
 }
 
 module.exports.sendPasswordResetToken = function(user){
@@ -138,25 +138,31 @@ module.exports.sendPasswordResetToken = function(user){
 
         const url = `localhost:3000/customer/resetPassword/${token}`
       
-        transport.sendMail({
-        from: 'Tamenemihret@gmail.com',
-        to: `${user.firstName} <${user.email}>`,
-        subject: 'B2B Password Reset',
-        html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
+        // transport.sendMail({
+        // from: 'Tamenemihret@gmail.com',
+        // to: `${user.firstName} <${user.email}>`,
+        // subject: 'B2B Password Reset',
+        // html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
         // html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
         // Please click on the link below, or paste this into your browser to complete the process:<br>
         // <a href=${url}>${url}</a> <br>
         // If you did not request this, please ignore this email and your password will remain unchanged.`
-    });
+   // });
+   return token;
 }
 module.exports.validatePassword = function(password){
     return Joi.validate(password, new PasswordComplexity({
-        min: 8, max: 25, lowerCase: 1, upperCase: 1, numeric: 1, symbol: 1, requirementCount: 4}).required());
+        min: 8, max: 25, lowerCase: 1, upperCase: 1, numeric: 1,  requirementCount: 3}).required());
 }
 
 module.exports.validateEmail = function(email){
     return Joi.validate(email, Joi.string().trim().email().required());
 }
+
+module.exports.validatePhoneNumber = function(phoneNumber){
+    return Joi.validate(phoneNumber, Joi.string().trim().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required());
+}
+
 
  // var options = {
     //     auth: {

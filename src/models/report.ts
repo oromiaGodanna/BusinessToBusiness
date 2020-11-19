@@ -69,7 +69,7 @@ const adminReportSchema = new Schema({
         closed: Number,
         open: Number,
     },
-    moneyTransfered: Float32Array,
+    moneyTransfered: Number,
 });
 const sellerReportSchema = new Schema({
     //orders: [ObjectId],

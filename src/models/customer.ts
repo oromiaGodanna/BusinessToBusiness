@@ -1,3 +1,5 @@
+import { Schema } from "mongoose";
+
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const extendSchema = require('mongoose-extend-schema');
@@ -9,17 +11,29 @@ const moment = require('moment');
 const {userSchema, joiUser, sendConfirmationEmail} = require('./user');
 
 const customerSchema = extendSchema(userSchema, {
-    alternativeEmail:String, 
-    phoneNumbers: [String],
-    address: {
-        country: String,
-        city: String,
-        street: String,
+    alternativeEmail:{
+        type:String, 
+        default: null
     },
+    mobile: String,
+    telephone: {
+        type: String,
+        default: null
+    },
+    country: String,
+    // address: {
+    //     country: String,
+    //     region: String,
+    //     city: String,
+    // },
     companyName: String,
-    tinNumber: {type:Number,
+    tinNumber: {
+        type:Number,
         //unique: true,
-        required: [true, 'You have to provide your companies Tin number']
+        required: [true, 'You have to provide your company Tin number']
+    },
+    joined: {
+        type: String,
     },
     preferedCatagories:[{
         type: ObjectId, 
@@ -57,13 +71,52 @@ const Buyer = mongoose.model('Buyer', buyerSchema, 'customers');
 
 //seller extends customer
 const sellerSchema = extendSchema(customerSchema, {
-    SocialLinks: [String], 
-    fax: String,
-    yearEstablished: Number, 
-    officalWebsite: String, 
-    businessType: String,
-    numOfEmployees: Number,
-    aboutUs: String, 
+    address : {
+        type: String,
+        default: null
+    },
+    socialLinks: {
+        facebook: {
+            type: String,
+            default: null
+        },
+        twitter:{
+            type: String,
+            default: null
+        },
+        instagram: {
+            type: String,
+            default: null
+        },
+        linkedin: {
+            type: String,
+            default: null
+        },
+    }, 
+    fax: {
+        type: String,
+        default: null
+    },
+    yearEstablished: {
+        type:Number, 
+        default: new Date().getFullYear()
+    },
+    officalWebsite: {
+        type: String,
+        default: null
+    }, 
+    businessType: {
+        type: String,
+        default: null
+    },
+    numOfEmployees: {
+        type:Number,
+        default: null
+    },
+    aboutUs: {
+        type: String, 
+        default: null
+    },
     subscription: {         
         id : {
             type: ObjectId, 
@@ -102,11 +155,34 @@ const bothSchema = extendSchema(sellerSchema, {
 
 const Both = mongoose.model("Both", bothSchema, 'customers');
 
+const deleteRequestSchema = new Schema({
+    name : {
+        type: String,
+        required: true,
+    }, 
+    email : {
+        type: String,
+        required: true
+    },
+    reason : {
+        type: String,
+        required: true
+    },
+    message: String,
+    user: {
+        type: ObjectId,
+        ref: 'Customer'
+    },
+});
+const DeleteRequest = mongoose.model('DeleteRequest', deleteRequestSchema);
+
+
 module.exports = {
     Customer: Customer,
     Buyer: Buyer,
     Seller: Seller,
-    Both: Both
+    Both: Both,
+    DeleteRequest: DeleteRequest
 };
 
 mongoose.set('useNewUrlParser', true);
@@ -114,18 +190,22 @@ mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 
 //validations 
-
 const joiCustomer = joiUser.keys({
-    alternativeEmail:Joi.string().email(), 
+    alternativeEmail: Joi.alternatives().try(Joi.string().email().lowercase(), Joi.valid(null)), 
     //phoneNumber: Joi.string().trim().regex(/^[0-9]{7,10}$/).required(),
-    phoneNumbers: Joi.array().items(Joi.string().required().regex(/\s*(?:\+?(\d{1,3}))?[\W\D\s]^|()*(\d[\W\D\s]*?\d[\D\W\s]*?\d)[\W\D\s]*(\d[\W\D\s]*?\d[\D\W\s]*?\d)[\W\D\s]*(\d[\W\D\s]*?\d[\D\W\s]*?\d[\W\D\s]*?\d)(?: *x(\d+))?\s*$/)),
-    address: {
-        country: Joi.string(),
-        city: Joi.string(),
-        street: Joi.string(),
-    },
+//    mobile: Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required(),
+   mobile: Joi.string().required().default('None'),
+   telephone: Joi.alternatives().try(Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")), Joi.valid(null)),
+   country: Joi.string().required(),
+   
+//    address: {
+//        country: Joi.string().required(),
+//        region: Joi.string(),
+//        city: Joi.string()
+//    },
     companyName: Joi.string().required(),
-    tinNumber: Joi.number().integer().required(),  
+    tinNumber: Joi.number().integer().min(10).required(), 
+    joined: Joi.string().max(moment().year()), 
     preferedCatagories: Joi.array().items(Joi.objectId()).default(null),  
     orderIds: Joi.array().items(Joi.objectId()).default(null),            
     paymentId: Joi.objectId().default(null),                             
@@ -138,14 +218,19 @@ const joiBuyer = joiCustomer.keys({
 });
 
 const joiSeller = joiCustomer.keys({
-   
-    SocialLinks: Joi.array().items(Joi.string().uri()).default(null), 
-    fax: Joi.string(),
-    yearEstablished: Joi.string().max(moment().year()),  
-    officalWebsite: Joi.string().trim().uri(), 
-    businessType: Joi.string(),
-    numOfEmployees: Joi.number().integer().min(0),
-    aboutUs: Joi.string(), 
+    address: Joi.alternatives().try(Joi.string().required(),Joi.valid(null)),
+    socialLinks: {
+        facebook: Joi.alternatives().try(Joi.string().uri(),Joi.valid(null)),
+        twitter: Joi.alternatives().try(Joi.string().uri(),Joi.valid(null)),
+        instagram: Joi.alternatives().try(Joi.string().uri(),Joi.valid(null)),
+        linkedin: Joi.alternatives().try(Joi.string().uri(),Joi.valid(null)),
+    },
+    fax: Joi.alternatives().try(Joi.string(),Joi.valid(null)),
+    yearEstablished: Joi.alternatives().try(Joi.number().max(moment().year()),Joi.valid(null)), 
+    officalWebsite: Joi.alternatives().try(Joi.string().trim().uri(),Joi.valid(null)),  
+    businessType: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
+    numOfEmployees: Joi.alternatives().try(Joi.number().integer().min(0),Joi.valid(null)),
+    aboutUs: Joi.alternatives().try(Joi.string(), Joi.valid(null)),  
     subscription: {         
         id : Joi.objectId(),
         startDate: Joi.date(),
@@ -171,6 +256,17 @@ module.exports.validateSeller = function(seller){
 };
 module.exports.validateBoth = function(both){
     return Joi.validate(both, joiBoth);
+}
+
+module.exports.validateDeleteRequest = function(request){
+    const deleteRequest = Joi.object({
+        name: Joi.string().required(),
+        email: Joi.string().trim().email().required().lowercase(),
+        reason: Joi.string().required(),
+        message: Joi.alternatives().try(Joi.string(), Joi.valid(null)), 
+        user: Joi.objectId().default(null), 
+    });
+    return deleteRequest.validate(request)
 }
 
 // module.exports.getCustomerType = function(user){

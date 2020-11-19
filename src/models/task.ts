@@ -4,19 +4,34 @@ const Schema = mongoose.Schema;
 const Joi = require('joi');
 
 const userType = ["Buyer", "Seller", "Admin"];
+
 const taskSchema = new Schema({
     taskName: {
         type: String,
         required: [true, 'The Task Name should be specified']
     },
+    description: String,
     userType: {
         type: String,
         enum: userType,
     },
     preConditions: [String],
-    description: String,
 });
+const FAQSchema = new Schema({
+    question: String,
+    answer: String
+});
+const catagorySchema = new Schema({
+    title: String,
+    subTitle: String,
+    tasks : [taskSchema],
+    FAQ: [FAQSchema],
+    popular: Boolean,
+    
+    
+    
 
+})
 const Task = mongoose.model('Task', taskSchema);
 module.exports = Task;
 

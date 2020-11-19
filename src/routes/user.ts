@@ -2,8 +2,9 @@ import {Request, Response} from "express";
 const express = require('express');
 const router = express.Router();
 const bcyrpt = require('bcrypt');
+const Joi = require('joi');
 
-const {Admin, validateAdmin, validateLoginInfo, generateAuthToken} = require('../models/user');
+const {Admin, validateAdmin, validateLoginInfo, generateAuthToken, validatePhoneNumber} = require('../models/user');
  
 //admin registration
 router.post('/admin', async(req, res)=>{
@@ -57,8 +58,20 @@ router.post('/login', async(req, res) => {
     res.header('token', token).json({
         status: 200,
         token: token,
-        msg:"Login Successfull"
+        msg:"Login Successfull",
+        data: admin
     });
+});
+
+
+router.post('/phoneNumber', async(req, res) =>{
+    const phoneNumber = req.body.phoneNumber;
+    const {error} = validatePhoneNumber(phoneNumber);
+    if(error) return res.status(400).send(error.details[0].message);
+
+    res.send("valid");
+
+
 });
 
 module.exports = router;

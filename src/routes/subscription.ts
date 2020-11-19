@@ -1,8 +1,10 @@
 export{};
 
-const Subscription = require('../models/subscription');
 const express = require('express');
 const router = express.Router();
+
+const Subscription = require('../models/subscription');
+const { Customer} = require('../models/customer');
 
 //create Subscription Model
 router.post('/create', async (req, res) => {
@@ -10,10 +12,12 @@ router.post('/create', async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
     let subscription = new Subscription({
         name: req.body.name,
+        description: req.body.description,
         numOfProducts: req.body.numOfProducts,
         numOfQuatations: req.body.numOfQuatations,
-        numOfEmail: req.body.numOfEmail,
-        monthlyPrice: req.body.monthlyPrice
+        numOfEmails: req.body.numOfEmails,
+        monthlyPrice: req.body.monthlyPrice,
+        // availableOn : req.body.availableOn,
     });
     try {
         const newSubscription = await subscription.save();
@@ -48,7 +52,7 @@ router.get('/:id', async (req, res) => {
             status: 400, 
             success: false,
             msg: 'Failed to get subscription Model', 
-            errorMesage: error.errmsg});
+            errorMessage: error.errmsg});
     }
 });
 
@@ -66,7 +70,7 @@ router.get('/', async (req, res) => {
             status: 400, 
             success: false,
             msg: 'Failed to get subscription Model', 
-            errorMesage: error.errmsg});
+            errorMessage: error.errmsg});
     }
 });
 
@@ -87,9 +91,22 @@ try{
         status: 400,
         success: false,
         msg: 'Subscription deletion failed',
-        errorMesage: error.errmsg
+        errorMessage: error.errmsg
     });
 }
+});
+
+router.put('/buy/:id', async(req, res) => {
+    try{
+        const customer = await Customer.findById(req.body.id);
+        if(customer.userType == 'Buyer') return res.status(400).send('Subscription Models are  for Sellers Only');
+    }catch(error){
+        res.json({
+            status: 400,
+            success : false,
+            errorMessage: error.errmsg
+        })
+    }
 });
 
 module.exports = router;

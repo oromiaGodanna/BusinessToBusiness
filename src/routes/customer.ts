@@ -3,12 +3,12 @@ const express = require('express');
 const router = express.Router();
 const bcyrpt = require('bcrypt');
 
-const asyncMiddleware = require('../middleware/async'); 
+const asyncMiddleware = require('../middleware/async');
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
 const jwt = require('jsonwebtoken');
-const { Customer, Buyer, Seller, Both, validateCustomer, validateBuyer, validateSeller, validateBoth, getCustomerType } = require('../models/customer');
-const { validateLoginInfo, generateAuthToken, sendConfirmationEmail, sendPasswordResetToken, validatePassword, validateEmail} = require('../models/user');
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');
+const { validateLoginInfo, generateAuthToken, sendConfirmationEmail, sendPasswordResetToken, validatePassword, validateEmail } = require('../models/user');
 
 
 //using asyc middlerware
@@ -24,13 +24,16 @@ router.post('/register', async (req, res) => {
     if (customer) return res.status(400).send('Customer with this email already exists.');
     const user = {
         email: req.body.email,
+        password: req.body.password,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         userType: req.body.userType,
-        password: req.body.password,
-        alternativeEmail: req.body.alternativeEmail,
-        phoneNumbers: req.body.phoneNumbers,
-        address: req.body.address,
+        // alternativeEmail: req.body.alternativeEmail,
+        mobile: req.body.mobile,
+        country: req.body.country,
+        // address: {
+        //     country: req.body.address.country,
+        // },
         companyName: req.body.companyName,
         tinNumber: req.body.tinNumber,
     }
@@ -47,12 +50,13 @@ router.post('/register', async (req, res) => {
     };
     try {
         const newCustomer = await customer.save();
-        //await sendConfirmationEmail(user);
+        const token = await sendConfirmationEmail(user);
         res.json({
             status: 200,
             success: true,
-            msg: 'Customer successfully registerd. Confirmation email sent',
-            customer: newCustomer
+            msg: 'Customer successfully registerd. Confirmation email was setsent',
+            customer: newCustomer,
+            token: token,
         });
     } catch (error) {
         console.log(error);
@@ -66,25 +70,38 @@ router.post('/register', async (req, res) => {
 });
 
 //email Verification
-router.post('/confirmation/:token', async (req, res) => {
+router.get('/email_confirmation/:token', async (req, res) => {
+    const token = req.params.token;
     try {
-        const user = jwt.verify(req.params.token, process.env.jwtPrivateKey);
-        await Customer.findByIdAndUpdate(user.id, { verified: true }, { new: true });
-        res.status(200).send("Email has been confirmed please process to the login page")
+        const user = await jwt.verify(token, process.env.jwtPrivateKey);
+        console.log('jwt', user);
+        if (!user) return res.status(400).send('Invalid token');
+        const verfiedUser = await Customer.findOneAndUpdate({ email: user.email }, { verified: true }, { new: true });
+        console.log('user', user);
+        res.json({
+            status: 200,
+            success: true,
+            msg: 'Email has been confirmed please process to the login page'
+        });
     } catch (err) {
-        res.status(400).send('Email not confirmed ');
+        res.json({
+            status: 400,
+            success: false,
+            msg: 'Email not confirmed.'
+        })
     }
 });
 
-router.post('/resend_Confirmation', async (req, res) => {
+router.post('/resend_confirmation', async (req, res) => {
     let customer = await Customer.findOne({ email: req.body.email });
+    if (!customer) return res.status(400).send('Customer with this email address can not be found');
     const user = {
         id: customer.id,
         firstName: customer.firstName,
         email: req.body.email
     }
     try {
-        await sendConfirmationEmail(user);
+        //await sendConfirmationEmail(user);
         res.status(200).send("Confirmation email sent");
     } catch (error) {
         res.status(400).send(error.errmsg);
@@ -94,11 +111,11 @@ router.post('/resend_Confirmation', async (req, res) => {
 //Autheneticate or login
 router.post('/login', async (req, res) => {
     const { error } = validateLoginInfo(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error) return res.status(400).json(error.details[0].message);
 
     let customer = await Customer.findOne({ email: req.body.email });
     if (!customer) return res.status(400).send('Invalid Email or password');
-    //if(!customer.verified) return res.status(403).send('Unconfirmed Email Address. Please confirm Your email to Login');
+    if (!customer.verified) return res.status(403).send('Unconfirmed Email Address. Please confirm Your email to Login');
 
     const validPassword = await bcyrpt.compare(req.body.password, customer.password);
     if (!validPassword) return res.status(400).send('Invalid Email or password');
@@ -107,6 +124,8 @@ router.post('/login', async (req, res) => {
     res.header('token', token).json({
         status: 200,
         token: token,
+        id: customer.id,
+        user: customer,
         msg: "Login Successfull"
     });
 });
@@ -118,12 +137,12 @@ router.get('/me', auth, async (req, res) => {
 });
 
 //retrive all customers
-router.get('/', [auth, role], async (req, res) => {
+router.get('/',  async (req, res) => {
     try {
         const customers = await Customer
-        .find()
-        .sort({companyName: 1})
-        .select({password: 0});
+            .find()
+            .sort({ companyName: 1 })
+            .select({ password: 0 });
         res.json({
             status: 200,
             success: true,
@@ -142,15 +161,15 @@ router.get('/', [auth, role], async (req, res) => {
 });
 
 //get customer by id
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
-        const customer = await Customer.findById(req.params.id);
+        const customer = await Customer.findById(req.params.id).select('-password');
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
         res.json({
             status: 200,
             success: true,
             msg: 'Customer retrived',
-            task: customer
+            user: customer
         });
     } catch (error) {
         console.log(Error);
@@ -164,46 +183,52 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 //get customers by a filter
-router.get('/filter/:filters', async(req, res) => {
+router.get('/filter/:filters', async (req, res) => {
     const filter = JSON.parse(req.params.filters);
     try {
-     const customers = await Customer
-     .find(filter)
-     .sort({companyName: 1})
-     .select({password: 0});
-     res.json({
-         status: 200,
-         success: true,
-         msg: 'All customers with this property successfully retrives',
-         ObjectsReturned: customers.length,
-         customers: customers
+        const customers = await Customer
+            .find(filter)
+            .sort({ companyName: 1 })
+            .select({ password: 0 });
+        res.json({
+            status: 200,
+            success: true,
+            msg: 'All customers with this property successfully retrives',
+            ObjectsReturned: customers.length,
+            customers: customers
         });
-        } catch (error) {
-            res.json({
-                status: 500,
-                success: false,
-                msg: 'Failed to retrive customers with this property',
-                errorMessage: error
-            });
-        }
+    } catch (error) {
+        res.json({
+            status: 500,
+            success: false,
+            msg: 'Failed to retrive customers with this property',
+            errorMessage: error
+        });
+    }
 });
 
 //complete Profile
-router.put('/completeProfile/:id', auth, async (req, res) => {
-    if(req.body.userType == "Buyer"){
+router.put('/updateProfile/:id', async (req, res) => {
+    console.log('update profile');
+    if (req.body.userType == "Buyer") {
         const { error } = validateBuyer(req.body);
         if (error) return res.status(400).send(error.details[0].message);
-    }else if(req.body.userType == "Seller"){
+    } else if (req.body.userType == "Seller") {
         console.log('if seller');
         const { error } = validateSeller(req.body);
         if (error) return res.status(400).send(error.details[0].message);
-    }else if(req.body.userType = "Both"){
+    } else if (req.body.userType = "Both") {
         const { error } = validateBoth(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+        if (error) return res.status(400).send(error.details[0].message);
     }
     try {
-        const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const customer = await Customer.updateOne({_id: req.params.id}, req.body);
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
+        // const customer = await Customer.findById(req.params.id);
+        // if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
+        // Customer.set(req.body);
+        // const updatedCustomer = Customer.save();
+        console.log(customer);
         res.json({
             status: 200,
             success: true,
@@ -220,6 +245,40 @@ router.put('/completeProfile/:id', auth, async (req, res) => {
         });
     }
 });
+
+
+router.post('/deleteRequest/:id', async(req, res) => {
+    const { error } = validateDeleteRequest(req.body);
+    if (error) return res.status(400).json(error.details[0].message);
+
+    let customer = await Customer.findOne({ email: req.body.email });
+    if (!customer) return res.status(400).send('Can not find a customer with this email. please check wheather you entered the right email address.');
+    
+    const request = new DeleteRequest({
+     name: req.body.name,
+     email: req.body.email,
+     reason: req.body.reason,
+     message: req.body.reason,
+     user: customer._id
+ });
+    try {
+        const newRequest = await request.save();
+        res.json({
+            status: 200,
+            success: true,
+            msg: 'Your Request has been successfully sent.',
+         
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({
+            status: 400,
+            success: false,
+            msg: "Failed to register customer",
+            errorMessage: error.errmsg
+        });
+    }
+})
 
 //delete Customer
 router.delete('/:id', [auth, role], async (req, res) => {
@@ -251,14 +310,15 @@ router.delete('/:id', [auth, role], async (req, res) => {
 });
 
 //change Password
-router.put('/changePassword/:id', auth, async (req, res)=>{
+router.put('/changePassword/:id', async (req, res) => {
+    console.log('change password');
     const { error } = validatePassword(req.body.newPassword);
     if (error) return res.status(400).send(error.details[0].message);
     const customer = await Customer.findById(req.params.id);
     if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
     const validPassword = await bcyrpt.compare(req.body.oldPassword, customer.password);
     if (!validPassword) return res.status(400).send('Invalid Email or password');
-    try{
+    try {
         const salt = await bcyrpt.genSalt(10);
         customer.password = await bcyrpt.hash(req.body.newPassword, salt);
         await customer.save()
@@ -267,35 +327,32 @@ router.put('/changePassword/:id', auth, async (req, res)=>{
             success: true,
             msg: 'Password successfully Changed',
         });
-    }catch(error){
+    } catch (error) {
         res.json({
             status: 400,
             success: false,
             msg: "Failed to change Password",
-            errorMessage: error.errmsg});
-    }  
+            errorMessage: error.errmsg
+        });
+    }
 });
 
 //change email
-router.put('/changeEmail/:id', auth, async(req, res)=>{
+router.put('/changeEmail/:id', async (req, res) => {
+    console.log('server change email');
     const { error } = validateEmail(req.body.email);
     if (error) return res.status(400).send(error.details[0].message);
-
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
-    customer.set({
-        email: req.body.email,
-        verified: false,
-    });
-    try{
-        await customer.save();
-        await sendConfirmationEmail(customer);
-        res.send("Confirmation email sent").json({
+    try {
+        let user = await Customer.findOne({ email: req.body.email });
+    if (user) return res.status(400).send('Customer with this email already exists.');
+        const customer = await Customer.findByIdAndUpdate(req.params.id, { email: req.body.email, verified: false }, { new: true });
+        if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
+        res.json({
             status: 200,
             success: true,
-            msg: 'email successfully changed',
+            msg: 'email successfully changed. Confirmation email has been sent to your new email Address',
         });
-    }catch(error){
+    } catch (error) {
         res.json({
             status: 400,
             success: false,
@@ -306,21 +363,21 @@ router.put('/changeEmail/:id', auth, async(req, res)=>{
 });
 
 //subscribe 
-router.put('/subscribe/:id', auth, async(req, res) => {
-    try{
-        const subscriber = await Buyer.findOneAndUpdate({_id:req.params.id}, { $addToSet: { 'subscribedTo': req.body.id }},{new: true});
+router.put('/subscribe/:id', async (req, res) => {
+    try {
+        const subscriber = await Buyer.findOneAndUpdate({ _id: req.params.id }, { $addToSet: { 'subscribedTo': req.body.id } }, { new: true });
         if (!subscriber) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
 
-        const subscribed = await Seller.findOneAndUpdate({_id:req.body.id}, {$addToSet: {'subscribers': req.params.id }},{new: true});
+        const subscribed = await Seller.findOneAndUpdate({ _id: req.body.id }, { $addToSet: { 'subscribers': req.params.id } }, { new: true });
         if (!subscribed) return res.json({ status: 404, success: false, msg: 'The Customer you are subscribing to can not be found' });
         res.json({
             status: 200,
             success: true,
-            subscriber:subscriber,
+            subscriber: subscriber,
             msg: `You have successfully subscribed to ${subscribed.companyName}.`,
             subscribed: subscribed
         });
-    }catch(error){
+    } catch (error) {
         res.json({
             status: 400,
             success: false,
@@ -331,21 +388,21 @@ router.put('/subscribe/:id', auth, async(req, res) => {
 });
 
 //unsubscribe
-router.put('/unsubscribe/:id', auth, async(req, res) => {
-    try{
-        const subscriber = await Buyer.findOneAndUpdate({_id:req.params.id}, { $pull: { 'subscribedTo': req.body.id }},{new: true});
+router.put('/unsubscribe/:id', async (req, res) => {
+    try {
+        const subscriber = await Buyer.findOneAndUpdate({ _id: req.params.id }, { $pull: { 'subscribedTo': req.body.id } }, { new: true });
         if (!subscriber) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
 
-        const unsubscribed = await Seller.findOneAndUpdate({_id:req.body.id}, {$pull: {'subscribers': req.params.id }},{new: true});
+        const unsubscribed = await Seller.findOneAndUpdate({ _id: req.body.id }, { $pull: { 'subscribers': req.params.id } }, { new: true });
         if (!unsubscribed) return res.json({ status: 404, success: false, msg: 'The Customer you are subscribing to can not be found' });
         res.json({
             status: 200,
             success: true,
-            subscriber:subscriber,
+            subscriber: subscriber,
             msg: `You have successfully subscribed to ${unsubscribed.companyName}.`,
             subscribed: unsubscribed
         });
-    }catch(error){
+    } catch (error) {
         res.json({
             status: 400,
             success: false,
@@ -357,78 +414,57 @@ router.put('/unsubscribe/:id', auth, async(req, res) => {
 });
 
 //forgot Password
-router.put('/forgotPassword', async(req, res)=>{
+router.put('/forgotPassword', async (req, res) => {
     const { error } = validateEmail(req.body.email);
     if (error) return res.status(400).send(error.details[0].message);
 
     let customer = await Customer.findOne({ email: req.body.email });
     if (!customer) return res.status(400).send('No user found with that email address');
-    try{
-     const data = await sendPasswordResetToken(customer);
-     console.log(data);
-     res.json({
-        status: 200,
-        success: true,
-        msg: `A link to reset you password has been sent to your email address ${req.body.email}`,
-    });
-} catch (error) {
-    console.log(error);
-    res.json({
-        status: 400,
-        success: false,
-        msg: "Failed to register customer",
-        errorMessage: error.errmsg
-    });
-}
+    try {
+        const token = await sendPasswordResetToken(customer);
+        console.log(token);
+        res.json({
+            status: 200,
+            success: true,
+            msg: `A link to reset you password has been sent to your email address ${req.body.email}`,
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({
+            status: 400,
+            success: false,
+            msg: "Failed to register customer",
+            errorMessage: error.errmsg
+        });
+    }
 });
 
-router.put('/resetPassword/:token', async(req, res) => {
+router.put('/resetPassword/:token', async (req, res) => {
+    //console.log(' server reset password');
     const user = jwt.verify(req.params.token, process.env.jwtPrivateKey);
+    //console.log(user);
     const { error } = validatePassword(req.body.newPassword);
     if (error) return res.status(400).send(error.details[0].message);
-    try{
+    try {
         const salt = await bcyrpt.genSalt(10);
-        user.password = await bcyrpt.hash(req.body.newPassword, salt);
-        await user.save()
+        const customer = await Customer.findById(user._id);
+        customer.password = await bcyrpt.hash(req.body.newPassword, salt);
+        await customer.save()
         res.json({
             status: 200,
             success: true,
             msg: 'Password has been reset successfully '
         });
-        }catch(error){
-            res.json({
-                status: 400,
-                success: false,
-                msg: "Failed to rest Password",
-                errorMessage: error.errmsg});
-    } 
+    } catch (error) {
+        res.json({
+            status: 400,
+            success: false,
+            msg: "Failed to rest Password",
+            errorMessage: error.errmsg
+        });
+    }
 });
 
-
-// //Edit a Customer
-// router.put('/:id', async(req, res) => {
-//     //validate - send 400 response if invalid
-//     //look up customer
-//     //if not exist,return 404
-//     try {
-//         const updatedCustomer = await Customer.findByIdAndUpdate(req.params.id,req.body, {new: true});
-//         if(!updatedCustomer) return res.json({status: 404, success: false, msg: 'Customer with this Id can not be found'});
-//         res.json({ 
-//             status: 200, 
-//             success: true, 
-//             msg: 'Customer successfully Updated', 
-//             customers:updatedCustomer});
-//         }
-//     catch(error){
-//         console.log(error);
-//         res.json({
-//             status: 400, 
-//             success: false,
-//             msg: 'Customer Update failed', 
-//             errorMesage: error.errmsg});
-//     }
-
-// });
 
 module.exports = router;
 
