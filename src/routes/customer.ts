@@ -4,7 +4,7 @@ const router = express.Router();
 const bcyrpt = require('bcrypt');
 
 const asyncMiddleware = require('../middleware/async');
-const auth = require('../middleware/auth');
+const {auth } = require('../middleware/auth');
 const role = require('../middleware/role');
 const jwt = require('jsonwebtoken');
 const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');
