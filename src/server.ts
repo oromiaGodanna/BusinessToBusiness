@@ -32,6 +32,15 @@ const task = require('./routes/task');
 const report = require('./routes/report');
 const country = require('./routes/country');
 
+// jerry's
+const productRoutes = require('./routes/product');
+const wishListRoutes = require('./routes/wishList');
+const cartRoutes = require('./routes/cart');
+const specialofferRoutes = require('./routes/specialOffer');
+const proformaRoutes = require('./routes/proforma');
+const categoryRoutes = require('./routes/category');
+const measurementRoutes = require('./routes/Measurement');
+//
 
 if(!process.env.jwtPrivateKey){
   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
@@ -107,6 +116,16 @@ app.use('/subscription', subscription);
 app.use('/tasks', task);
 app.use('/report', report);
 app.use('/countries', country);
+
+// jerry's
+app.use('/api',productRoutes);
+app.use('/api',wishListRoutes);
+app.use('/api',cartRoutes);
+app.use('/api',specialofferRoutes);
+app.use('/api',proformaRoutes);
+app.use('/api',categoryRoutes);
+app.use('/api',measurementRoutes);
+//
 
 app.use(error);
 
