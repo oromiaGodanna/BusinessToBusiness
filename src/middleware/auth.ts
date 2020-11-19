@@ -1,18 +1,18 @@
 export { };
 
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 function auth(req, res, next) {
 
-    const token = req.header('x-auth-token');
-    if (!token) return res.status(401).send('Access Denied. No token provided');
-
-    try {
-        const decoded = jwt.verify(token, 'jwtPrivateKey');
-        req.user = decoded;
+    const token = req.header('token');
+    if(!token) return res.status(401).send('Access Denied.No Token Provided. ');
+    try{
+        const decodedToken = jwt.verify(token, process.env.jwtPrivateKey);
+        req.user = decodedToken;
         next();
-    } catch (ex) {
-        res.status(400).send('Invalid token');
+    }catch(ex){
+        res.status(400).send('Invalid Token');
     }
 }
 

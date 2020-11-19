@@ -38,7 +38,15 @@
     "socket.io": "^2.3.0",
     "twilio": "^3.41.1",
     "winston": "^3.2.1",
-    "winston-mongodb": "^5.0.1"
+    "winston-mongodb": "^5.0.1",
+    "bcrypt": "^5.0.0",
+    "joi-password-complexity": "^2.0.1",
+    "moment": "^2.27.0",
+    "mongoose-extend-schema": "^1.0.0",
+    "mongoose-schema-extend": "^0.2.2",
+    "nodemailer": "^6.4.11",
+    "nodemailer-sendgrid": "^1.0.3",
+    "nodemailer-sendgrid-transport": "^0.2.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.7",
