@@ -102,7 +102,9 @@ module.exports.generateAuthToken = function(user){
         firstName: user.firstName, 
         lastName: user.lastName, 
         email: user.email, 
-        userType: user.userType}, 
+        userType: user.userType,
+        wishListId: user.wishListId,
+        cartId: user.cartId}, 
         process.env.jwtPrivateKey
         );
         return token;
