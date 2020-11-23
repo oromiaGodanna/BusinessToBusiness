@@ -42,10 +42,10 @@ const categoryRoutes = require('./routes/category');
 const measurementRoutes = require('./routes/Measurement');
 //
 
-if(!process.env.jwtPrivateKey){
+/*if(!process.env.jwtPrivateKey){
   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
   process.exit(1);
-}
+}*/
 
 // sockets
 const MessageSocket = require('./realtime/messageSocket');
