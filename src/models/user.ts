@@ -120,14 +120,14 @@ module.exports.sendConfirmationEmail = function(user){
         email: user.email, 
         },process.env.jwtPrivateKey);
 
-        const url = `localhost:3000/customer/email_confirmation/${token}`
-      
-    //     return transport.sendMail({
-    //     from: 'Tamenemihret@gmail.com',
-    //     to: `${user.firstName} <${user.email}>`,
-    //     subject: 'Confirmation Email',
-    //     html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
-    // });
+        const url = `localhost:4200/email_confirmation/${token}`
+        return transport.sendMail({
+        from: 'Tamenemihret@gmail.com',
+        to: `${user.firstName} <${user.email}>`,
+        subject: 'Confirmation Email',
+        html: `Copy and paste the link below to confirm Your email.<a href=${url}>${url}</a> If you did not request this, please ignore this email.`
+
+    });
     return token;
 }
 
@@ -138,18 +138,18 @@ module.exports.sendPasswordResetToken = function(user){
         email: user.email, 
         },process.env.jwtPrivateKey);
 
-        const url = `localhost:3000/customer/resetPassword/${token}`
+        const url = `localhost:4200/reset_password/${token}`
       
-        // transport.sendMail({
-        // from: 'Tamenemihret@gmail.com',
-        // to: `${user.firstName} <${user.email}>`,
-        // subject: 'B2B Password Reset',
-        // html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
-        // html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
-        // Please click on the link below, or paste this into your browser to complete the process:<br>
-        // <a href=${url}>${url}</a> <br>
-        // If you did not request this, please ignore this email and your password will remain unchanged.`
-   // });
+        transport.sendMail({
+        from: 'Tamenemihret@gmail.com',
+        to: `${user.firstName} <${user.email}>`,
+        subject: 'B2B Password Reset',
+        //html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
+        html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
+        Please click on the link below, or paste this into your browser to complete the process:<br>
+        <a href=${url}>${url}</a> <br>
+        If you did not request this, please ignore this email and your password will remain unchanged.`
+   });
    return token;
 }
 module.exports.validatePassword = function(password){
