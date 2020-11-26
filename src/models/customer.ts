@@ -20,7 +20,7 @@ const customerSchema = extendSchema(userSchema, {
         type: String,
         default: null
     },
-    country: String,
+    //country: String,
     // address: {
     //     country: String,
     //     region: String,
@@ -194,9 +194,9 @@ const joiCustomer = joiUser.keys({
     alternativeEmail: Joi.alternatives().try(Joi.string().email().lowercase(), Joi.valid(null)), 
     //phoneNumber: Joi.string().trim().regex(/^[0-9]{7,10}$/).required(),
 //    mobile: Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required(),
-   mobile: Joi.string().required().default('None'),
+   mobile: Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required(),
    telephone: Joi.alternatives().try(Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")), Joi.valid(null)),
-   country: Joi.string().required(),
+   //country: Joi.string().required(),
    
 //    address: {
 //        country: Joi.string().required(),
