@@ -14,11 +14,11 @@ router.post('/createOrder', async (req, res) => {
     let order = new Order({ 
         buyerId: req.body.buyerId,
         sellerId: req.body.sellerId,
-        productIds: req.body.productIds,
-        amount: req.body.amount,
-        price: req.body.price,
+        cartEntryId: req.body.cartEntryId,
+        totalAmount: req.body.totalAmount,
+        totalPrice: req.body.totalPrice,
         shippingAddress: req.body.shippingAddress,
-        status: req.body.status,
+        status: "Waiting for confirmation",
         paymentIds: req.body.paymentIds,
     });
     order = await order.save();
