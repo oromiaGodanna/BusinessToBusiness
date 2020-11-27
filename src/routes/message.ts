@@ -16,7 +16,7 @@ router.get('', auth, async (req, res) => {
         .find({
             users: req.user._id
         })
-        .populate('users', 'name')
+        .populate('users', 'firstName')
         .sort('-dateOfLastMessage')
         .select({ messages: 0 });
 
@@ -52,7 +52,7 @@ router.get('/:convId', auth, async (req, res) => {
             }
         },
         { new: true }
-    ).populate('messages.sender', 'name image');
+    ).populate('messages.sender', 'firstName image');
 
     console.log(conversation);
 
@@ -172,7 +172,7 @@ router.put('/:convId', auth, async (req, res) => {
             }
         },
         { new: true }
-    ).populate('messages.sender', 'name image');
+    ).populate('messages.sender', 'firstName image');
 
 
     if (!conversation) return res.status(404).send('The conversation with the given ID was not found.');
@@ -199,7 +199,7 @@ router.put('/deleteMany/:convId', auth, async (req, res) => {
     const messageIds = req.body.messageIds;
 
 
-    let conversation = await Conversation.findById(req.params.convId).populate('messages.sender', 'name image');
+    let conversation = await Conversation.findById(req.params.convId).populate('messages.sender', 'firstName image');
 
     if (!conversation) return res.status(404).send('The conversation with the given ID was not found.');
 
@@ -304,6 +304,8 @@ async function unreadCount(socket, isSender) {
 
     console.log(count);
 
+    if (conversations.length == 0) return;
+
     return [count, userTracker.userId];
 }
 
@@ -359,7 +361,7 @@ async function sendMessage(convId, message) {
             }
         },
         { new: true }
-    ).populate('messages.sender', 'name image');
+    ).populate('messages.sender', 'firstName image');
 
 
     // if (!conversation) return res.status(404).send('The conversation with the given ID was not found.');
@@ -389,7 +391,7 @@ async function getConversation(convId, socket){
             }
         },
         { new: true }
-    ).populate('messages.sender', 'name image');
+    ).populate('messages.sender', 'firstName image');
 
 
     if (!conversation) return socket.error('The conversation with the given ID was not found.');
