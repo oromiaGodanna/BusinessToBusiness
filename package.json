@@ -26,9 +26,12 @@
     "joi": "^17.2.1",
     "joi-objectid": "^3.0.1",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "mongoose": "^5.10.3",
     "stripe": "^8.89.0"
 =======
+=======
+>>>>>>> feat/disputeManagement
     "mongoose": "^5.9.2"
 >>>>>>> feat/review
   },
