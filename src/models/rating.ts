@@ -1,4 +1,4 @@
-
+export {};
 const mongoose = require('mongoose');
 const Joi = require('joi');
 const Rating = mongoose.model('Rating', new mongoose.Schema({
