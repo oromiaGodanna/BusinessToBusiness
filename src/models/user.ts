@@ -120,14 +120,14 @@ module.exports.sendConfirmationEmail = function(user){
         email: user.email, 
         },process.env.jwtPrivateKey);
 
-    //     const url = `localhost:4200/email_confirmation/${token}`
-    //     return transport.sendMail({
-    //     from: 'Tamenemihret@gmail.com',
-    //     to: `${user.firstName} <${user.email}>`,
-    //     subject: 'Confirmation Email',
-    //     html: `Copy and paste the link below to confirm Your email.<a href=${url}>${url}</a> If you did not request this, please ignore this email.`
-    // });
-    return token;
+        const url = `localhost:4200/email_confirmation/${token}`
+        return transport.sendMail({
+        from: 'Tamenemihret@gmail.com',
+        to: `${user.firstName} <${user.email}>`,
+        subject: 'Confirmation Email',
+        html: `Copy and paste the link below to confirm Your email.<a href=${url}>${url}</a> If you did not request this, please ignore this email.`
+    });
+    //return token;
 }
 
 module.exports.sendPasswordResetToken = function(user){
@@ -139,17 +139,17 @@ module.exports.sendPasswordResetToken = function(user){
 
         const url = `localhost:4200/reset_password/${token}`
       
-//         transport.sendMail({
-//         from: 'Tamenemihret@gmail.com',
-//         to: `${user.firstName} <${user.email}>`,
-//         subject: 'B2B Password Reset',
-//         //html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
-//         html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
-//         Please click on the link below, or paste this into your browser to complete the process:<br>
-//         <a href=${url}>${url}</a> <br>
-//         If you did not request this, please ignore this email and your password will remain unchanged.`
-//    });
-   return token;
+        return transport.sendMail({
+        from: 'Tamenemihret@gmail.com',
+        to: `${user.firstName} <${user.email}>`,
+        subject: 'B2B Password Reset',
+        //html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
+        html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
+        Please click on the link below, or paste this into your browser to complete the process:<br>
+        <a href=${url}>${url}</a> <br>
+        If you did not request this, please ignore this email and your password will remain unchanged.`
+   });
+  // return token;
 }
 module.exports.validatePassword = function(password){
     return Joi.validate(password, new PasswordComplexity({
@@ -163,17 +163,3 @@ module.exports.validateEmail = function(email){
 module.exports.validatePhoneNumber = function(phoneNumber){
     return Joi.validate(phoneNumber, Joi.string().trim().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required());
 }
-
-
- // var options = {
-    //     auth: {
-    //       api_user: 'SENDGRID_USERNAME',  
-    //       api_key: process.env.sendGridApiKey
-    //     }
-    //   } 
-    // var email = {
-    //     from: 'Tamenemihret@gmail.com',
-    //     to: user.email,
-    //     subject: 'Confirm Your email address',
-    //     html: '<b>By clicking on the following link, you are confirming your email address.</b>'
-    //   };

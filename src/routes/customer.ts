@@ -28,12 +28,7 @@ router.post('/register', async (req, res) => {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         userType: req.body.userType,
-        // alternativeEmail: req.body.alternativeEmail,
         mobile: req.body.mobile,
-        country: req.body.country,
-        // address: {
-        //     country: req.body.address.country,
-        // },
         companyName: req.body.companyName,
         tinNumber: req.body.tinNumber,
     }
@@ -50,13 +45,12 @@ router.post('/register', async (req, res) => {
     };
     try {
         const newCustomer = await customer.save();
-        const token = await sendConfirmationEmail(user);
+        await sendConfirmationEmail(user);
         res.json({
             status: 200,
             success: true,
             msg: 'Customer successfully registerd. Confirmation email was setsent',
             customer: newCustomer,
-            token: token,
         });
     } catch (error) {
         console.log(error);
@@ -209,25 +203,20 @@ router.get('/filter/:filters', async (req, res) => {
 
 //complete Profile
 router.put('/updateProfile/:id', async (req, res) => {
-    console.log('update profile');
-    if (req.body.userType == "Buyer") {
-        const { error } = validateBuyer(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-    } else if (req.body.userType == "Seller") {
-        console.log('if seller');
-        const { error } = validateSeller(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-    } else if (req.body.userType = "Both") {
-        const { error } = validateBoth(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-    }
+    // if (req.body.userType == "Buyer") {
+    //     const { error } = validateBuyer(req.body);
+    //     if (error) return res.status(400).send(error.details[0].message);
+    // } else if (req.body.userType == "Seller") {
+    //     console.log('if seller');
+    //     const { error } = validateSeller(req.body);
+    //     if (error) return res.status(400).send(error.details[0].message);
+    // } else if (req.body.userType = "Both") {
+    //     const { error } = validateBoth(req.body);
+    //     if (error) return res.status(400).send(error.details[0].message);
+    // }
     try {
-        const customer = await Customer.updateOne({_id: req.params.id}, req.body);
+        const customer = await Customer.updateOne({_id: req.params.id}, {$set: req.body});
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
-        // const customer = await Customer.findById(req.params.id);
-        // if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
-        // Customer.set(req.body);
-        // const updatedCustomer = Customer.save();
         console.log(customer);
         res.json({
             status: 200,
@@ -421,8 +410,7 @@ router.put('/forgotPassword', async (req, res) => {
     let customer = await Customer.findOne({ email: req.body.email });
     if (!customer) return res.status(400).send('No user found with that email address');
     try {
-        const token = await sendPasswordResetToken(customer);
-        console.log(token);
+        await sendPasswordResetToken(customer);
         res.json({
             status: 200,
             success: true,
@@ -440,9 +428,7 @@ router.put('/forgotPassword', async (req, res) => {
 });
 
 router.put('/resetPassword/:token', async (req, res) => {
-    //console.log(' server reset password');
     const user = jwt.verify(req.params.token, process.env.jwtPrivateKey);
-    //console.log(user);
     const { error } = validatePassword(req.body.newPassword);
     if (error) return res.status(400).send(error.details[0].message);
     try {

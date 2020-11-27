@@ -20,12 +20,6 @@ const customerSchema = extendSchema(userSchema, {
         type: String,
         default: null
     },
-    //country: String,
-    // address: {
-    //     country: String,
-    //     region: String,
-    //     city: String,
-    // },
     companyName: String,
     tinNumber: {
         type:Number,
@@ -37,15 +31,18 @@ const customerSchema = extendSchema(userSchema, {
     },
     preferedCatagories:[{
         type: ObjectId, 
-        ref: 'Catagory'
+        ref: 'Catagory',
+        default: null
     }],
     orderIds: [{
         type: ObjectId, 
-        ref: 'Order'
+        ref: 'Order',
+        default: null,
     }],              
     paymentId:{
         type:ObjectId, 
-        ref: 'Payment'
+        ref: 'Payment',
+        default: null
     }
 });
 
@@ -55,15 +52,18 @@ const Customer = mongoose.model('Customer', customerSchema, 'customers');
 const buyerSchema = extendSchema(customerSchema, {
     subscribedTo: [{
         type: ObjectId, 
-        ref: 'Customer'
+        ref: 'Customer',
+        default: null
     }],
     cartId: {
         type:ObjectId, 
-        ref: 'Cart'
+        ref: 'Cart',
+        default: null
     },
     wishListId: {
         type: ObjectId, 
-        ref: 'Wishlist'
+        ref: 'Wishlist',
+        default: null
     },
 });
 
@@ -98,7 +98,7 @@ const sellerSchema = extendSchema(customerSchema, {
         default: null
     },
     yearEstablished: {
-        type:Number, 
+        type: Date, 
         default: new Date().getFullYear()
     },
     officalWebsite: {
@@ -120,7 +120,8 @@ const sellerSchema = extendSchema(customerSchema, {
     subscription: {         
         id : {
             type: ObjectId, 
-            ref: 'Subscription'
+            ref: 'Subscription',
+            default: null
         },
         startDate: Date,
         endDate: Date,
@@ -128,11 +129,14 @@ const sellerSchema = extendSchema(customerSchema, {
     },
     products: [{
         type:ObjectId,
-        ref: 'Product'
+        ref: 'Product',
+        default: null
     }],
     subscribers: [{
         type: ObjectId, 
-        ref: 'Customer'}]
+        ref: 'Customer',
+        default: null
+}]
 
 });
 
@@ -142,14 +146,18 @@ const Seller = mongoose.model("Seller", sellerSchema, 'customers');
 const bothSchema = extendSchema(sellerSchema, {
     subscribers: [{
         type: ObjectId, 
-        ref: 'Customer'}], 
+        ref: 'Customer',
+        default: null
+    }], 
     cartId: {
         type: ObjectId, 
-        ref: 'Cart'
+        ref: 'Cart',
+        default: null
     },
     wishListId: {
         type: ObjectId, 
-        ref: 'Wishlist'
+        ref: 'Wishlist',
+        default: null
     }
 });
 
@@ -192,17 +200,8 @@ mongoose.set('useCreateIndex', true);
 //validations 
 const joiCustomer = joiUser.keys({
     alternativeEmail: Joi.alternatives().try(Joi.string().email().lowercase(), Joi.valid(null)), 
-    //phoneNumber: Joi.string().trim().regex(/^[0-9]{7,10}$/).required(),
-//    mobile: Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required(),
    mobile: Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")).required(),
    telephone: Joi.alternatives().try(Joi.string().regex(new RegExp("^((\\+91-?)|0)?[0-9]{10}$")), Joi.valid(null)),
-   //country: Joi.string().required(),
-   
-//    address: {
-//        country: Joi.string().required(),
-//        region: Joi.string(),
-//        city: Joi.string()
-//    },
     companyName: Joi.string().required(),
     tinNumber: Joi.number().integer().min(10).required(), 
     joined: Joi.string().max(moment().year()), 
@@ -226,7 +225,7 @@ const joiSeller = joiCustomer.keys({
         linkedin: Joi.alternatives().try(Joi.string().uri(),Joi.valid(null)),
     },
     fax: Joi.alternatives().try(Joi.string(),Joi.valid(null)),
-    yearEstablished: Joi.alternatives().try(Joi.number().max(moment().year()),Joi.valid(null)), 
+    yearEstablished: Joi.alternatives().try(Joi.date().max(moment().year()),Joi.valid(null)), 
     officalWebsite: Joi.alternatives().try(Joi.string().trim().uri(),Joi.valid(null)),  
     businessType: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
     numOfEmployees: Joi.alternatives().try(Joi.number().integer().min(0),Joi.valid(null)),
@@ -268,16 +267,6 @@ module.exports.validateDeleteRequest = function(request){
     });
     return deleteRequest.validate(request)
 }
-
-// module.exports.getCustomerType = function(user){
-//     if(user.userType == 'Buyer'){
-//         return new Buyer(user);
-//     }if (user.userType == 'Seller') {
-//         return new Seller(user);
-//     } else {
-//         return undefined;
-//     }
-// }
 
 
 
