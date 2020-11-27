@@ -8,6 +8,10 @@ const stripe = require("stripe")("sk_test_51HJ1IYKh0KNnlGFstXGy55rb5I25EORqC3dvH
 const cors = require('cors');
 
 
+const rating = require('./routes/rating')
+const review = require('./routes/review')
+
+
 const order = require('./routes/order');
 const payment = require('./routes/payment')
 
@@ -37,6 +41,9 @@ const paymentIntent = await stripe.paymentIntents.create({
   metadata: {integration_check: 'accept_a_payment'},
 });
 })();
+app.use('/rating', rating);
+app.use('/review', review);
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
