@@ -82,6 +82,7 @@ const port = process.env.PORT || 3000;
 // Allowing cross-origin sites to make requests to this API
 app.use((req, res, next) => {
   res.append('Access-Control-Allow-Origin', 'http://localhost:4200');
+  //res.append('Access-Control-Allow-Origin', '*');
   res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.append("Access-Control-Allow-Headers", "x-auth-token, Origin, Accept,Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
   res.append('Access-Control-Allow-Credentials', true);
@@ -133,8 +134,6 @@ app.use(error);
 const server = app.listen(port, () => {
   return console.log(`server is listening on ${port}...`);
 });
-
-
 
 
 const io = socket(server);
