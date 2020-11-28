@@ -19,7 +19,7 @@ function auth(req, res, next) {
 
 function authSocket(socket, next) {
     if (socket.handshake.query && socket.handshake.query.token) {
-        jwt.verify(socket.handshake.query.token, 'jwtPrivateKey', function (err, decoded) {
+        jwt.verify(socket.handshake.query.token, process.env.jwtPrivateKey, function (err, decoded) {
             if (err) { 
                 console.log(err);
                 return next(new Error('Authentication error'));

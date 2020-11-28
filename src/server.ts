@@ -3,7 +3,7 @@ export { };
 
 require('dotenv').config();
 const express = require('express');
-var Joi = require('joi');
+var Joi = require('@hapi/joi');
 Joi.objectId = require('joi-objectid')(Joi);
 // Joi = Joi.extend(require('joi-phone-number'));
 const Fawn = require('fawn');
@@ -39,13 +39,19 @@ const cartRoutes = require('./routes/cart');
 const specialofferRoutes = require('./routes/specialOffer');
 const proformaRoutes = require('./routes/proforma');
 const categoryRoutes = require('./routes/category');
-const measurementRoutes = require('./routes/Measurement');
-//
+const measurementRoutes = require('./routes/measurement');
 
-/*if(!process.env.jwtPrivateKey){
-  console.error('FATAL ERROR: jwtPrivateKey is not defined.');
-  process.exit(1);
-}*/
+//ori's
+const dispute = require('./routes/dispute')
+const rating = require('./routes/rating')
+const review = require('./routes/review')
+const order = require('./routes/order');
+const payment = require('./routes/payment')
+
+// if(!process.env.jwtPrivateKey){
+//   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
+//   process.exit(1);
+// }
 
 // sockets
 const MessageSocket = require('./realtime/messageSocket');
@@ -84,7 +90,7 @@ app.use((req, res, next) => {
   res.append('Access-Control-Allow-Origin', 'http://localhost:4200');
   //res.append('Access-Control-Allow-Origin', '*');
   res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.append("Access-Control-Allow-Headers", "x-auth-token, Origin, Accept,Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+  res.append("Access-Control-Allow-Headers", "token, Origin, Accept,Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, access-control-allow-origin");
   res.append('Access-Control-Allow-Credentials', true);
   next();
 });
@@ -126,7 +132,13 @@ app.use('/specialOffer',specialofferRoutes);
 app.use('/proforma',proformaRoutes);
 app.use('/category',categoryRoutes);
 app.use('/measurement',measurementRoutes);
-//
+
+//ori's
+app.use('/order', order);
+app.use('/payment', payment);
+app.use('/rating', rating);
+app.use('/review', review);
+app.use('/dispute', dispute);
 
 app.use(error);
 

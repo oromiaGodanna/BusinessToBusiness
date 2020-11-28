@@ -25,11 +25,19 @@ async function message(convId, message) {
     await sendMessage(convId, message);
     // for sender
     let countForSender = await unreadCount(this.socket, true);
+
+    // the user has no conversations
+    if(!countForSender) return;
+
     this.io.to(this.socket.user._id).emit('unreadCount', countForSender[0]);
     console.log(`countForSender.first: ${countForSender[0]}`);
 
     // for receiver
     let countForReceiver = await unreadCount(this.socket, false);
+
+    // the user has no conversations
+    if(!countForReceiver) return;
+
     this.io.to(countForReceiver[1]).emit('unreadCount', countForReceiver[0]);
     console.log(`countForReceiver.first: ${countForSender[0]}`);
 
@@ -38,6 +46,10 @@ async function message(convId, message) {
 async function getUnreadMessageCount(){
     
     let countForSender = await unreadCount(this.socket, true);
+
+    // the user has no conversations
+    if(!countForSender) return;
+
     this.io.to(this.socket.user._id).emit('unreadCount', countForSender[0]);
 }
 
