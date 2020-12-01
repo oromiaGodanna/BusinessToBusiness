@@ -449,11 +449,17 @@ router.get("/getItems/:proformaId",auth, async function (req, res) {
 
 router.post("/sendResponse",auth, async function (req, res) {
   const tok = req.user._id;
+  var customer = await Customer.findOne({ _id: req.user._id });
+  var fullname = customer.firstName+" "+customer.lastName;
+ // console.log(fullname);
 
   var response = Response();
   response.userId = req.user._id;
+  response.respondBy = fullname;
   response.itemId = req.body.itemId;
   response.unitPrice = req.body.unitPrice;
+
+  
 
   
   if ((req.user._id = "" || null)) {
@@ -558,23 +564,10 @@ router.get("/getProformaResponses/:proformaId",auth, async function (req, res) {
 
         res.send("no response found.");
       } else {
-
-        var userData=[{
-                      username:'eyerus zewdu',
-                      type:'seller',
-                      firstname:"eyerus",
-                      lastname:"zewdu"
-                    },{
-                      username:'eyerus zewdu',
-                      type:'buyer',
-                      firstname:"eyerus",
-                      lastname:"zewdu"
-                    }]
-
+        
         res.send({
           response: proformaD.response,
-          items: proformaD.items,
-          users:userData
+          items: proformaD.items
         });
 
         //res.send(proformaD.response);
@@ -600,22 +593,11 @@ router.get("/getResponses/:itemId",auth, async function (req, res) {
 
         res.send("no response found.");
       } else {
-          var userData=[{
-            username:'eyerus zewdu',
-            type:'seller',
-            firstname:"eyerus",
-            lastname:"zewdu"
-          },{
-            username:'eyerus zewdu',
-            type:'buyer',
-            firstname:"eyerus",
-            lastname:"zewdu"
-          }]
 
           res.send({
           response: proformaD.response,
-          items: proformaD.items,
-          users:userData
+          items: proformaD.items
+          
           });
         //res.send(proformaD.response);
       }
