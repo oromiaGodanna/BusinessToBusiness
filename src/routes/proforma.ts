@@ -3,51 +3,26 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 var { Proforma, Item, Response, validateItem, validateResponse, validateProforma } = require('../models/proforma');
-const Customer = require('../models/customer');
 const { Notification } = require('../models/notification');
+
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-  var token = {
-    userId: "5e85f695a168ad33bc928193"
-  };
-        /*
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-  if (token) {
-    req.token = token;
-    next();
-  } else {
-    res.json({ sucess: false, message: "No Token was provided" });
-  }
-});
 
-router.post("/createProforma", async function (req, res) {
-
+router.post("/createProforma",auth, async function (req, res) {
+  var tokenId = req.user._id;
   const itemsObj = req.body.items;
   var proforma = Proforma();
-  proforma.userId = req.token.userId;
+  proforma.userId = req.user._id;
   proforma.startDate = req.body.startDate;
   proforma.endDate = req.body.endDate;
   proforma.maxResponse = req.body.maxResponse;
   proforma.response = req.body.response;
 
   
-  if ((req.token.userId = "" || null)) {
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to create proforma"
@@ -70,7 +45,7 @@ router.post("/createProforma", async function (req, res) {
            // res.redirect(307, "addItem/" + proformaCreated._id);
            
           
-              await Proforma.findOne({ _id: proformaCreated._id,userId:req.token.userId }, async function (err, pr) {
+              await Proforma.findOne({ _id: proformaCreated._id,userId:tokenId }, async function (err, pr) {
                 if (err) {
                    throw err;
                 }else {
@@ -104,10 +79,10 @@ router.post("/createProforma", async function (req, res) {
 });
 
 //request proforma
-router.post("/requestProforma/:proformaId", async function (req, res) {
+router.post("/requestProforma/:proformaId",auth, async function (req, res) {
 
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || (req.token.userId = null))) {
+  const tok =  req.user._id;
+  if ((req.user._id = "" || (req.user._id = null))) {
     res.json({
       sucess: false,
       message: "You must login to send proforma to sellers"
@@ -115,14 +90,15 @@ router.post("/requestProforma/:proformaId", async function (req, res) {
 
   } else {
 
-    await Proforma.findOne({ _id: req.params.proformaId }, async function (err, proforma) {
+    await Proforma.findOne({ _id: req.params.proformaId,closed:false }, async function (err, proforma) {
+
       if (err) {
         throw err;
 
       } else if (proforma == null || proforma.items == null) {
         res.json({ sucess: true, message: "proforma not found or the proforma doesnot contain items" });
 
-      } else if (proforma.userId != tok) {
+      } else if(proforma.userId != tok) {
         //console.log(tok);
         res.send("you cannot send requests regarding the proforma");
 
@@ -172,9 +148,9 @@ router.post("/requestProforma/:proformaId", async function (req, res) {
 });
 
 //get the proforma
-router.get("/getProforma/:proformaId", async function (req, res) {
+router.get("/getProforma/:proformaId",auth, async function (req, res) {
 
-  if ((req.token.userId = "" || null)) {
+  if (( req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to get the profroma"
@@ -192,10 +168,10 @@ router.get("/getProforma/:proformaId", async function (req, res) {
 ///
 ///
 ///to be deleted soon
-//get all the proformas created by the user
-router.get("/getProformas", async function (req, res) {
+//get all the proformas just to test on backend
+router.get("/getProformas",auth, async function (req, res) {
 
-  if ((req.token.userId = "" || null)) {
+  if (( req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to get proformas you created"
@@ -211,9 +187,9 @@ router.get("/getProformas", async function (req, res) {
   }
 });
 //get all the proformas created by the user who has logged in
-router.get("/getMyProformas", async function (req, res) {
-  const tokenUserId = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.get("/getMyProformas",auth, async function (req, res) {
+  const tokenUserId = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to get proformas you created"
@@ -229,9 +205,9 @@ router.get("/getMyProformas", async function (req, res) {
   }
 });
 //get all the pending proforma created by the user who has logged in
-router.get("/pendingProforma", async function (req, res) {
-  const tokenUserId = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.get("/pendingProforma",auth, async function (req, res) {
+  const tokenUserId = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to get proformas you created"
@@ -248,9 +224,9 @@ router.get("/pendingProforma", async function (req, res) {
 });
 
 //get all the active proforma created by the user who has logged in
-router.get("/activeProforma", async function (req, res) {
-  const tokenUserId = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.get("/activeProforma",auth, async function (req, res) {
+  const tokenUserId = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to get proformas you created"
@@ -267,9 +243,9 @@ router.get("/activeProforma", async function (req, res) {
 });
 
 //get all the closed proforma created by the user who has logged in
-router.get("/closedProforma", async function (req, res) {
-  const tokenUserId = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.get("/closedProforma",auth, async function (req, res) {
+  const tokenUserId = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to get proformas you created"
@@ -288,9 +264,9 @@ router.get("/closedProforma", async function (req, res) {
 
 
 //close proforma
-router.get("/closeProforma/:proformaId", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.get("/closeProforma/:proformaId",auth, async function (req, res) {
+  const tok = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to close the proformas"
@@ -306,7 +282,7 @@ router.get("/closeProforma/:proformaId", async function (req, res) {
         res.json({ sucess: true, message: "proforma not found" });
 
       } else if (proformaD.userId != tok) {
-        console.log(req.token.userId);
+        
         res.send("you cannot close the proforma");
 
       } else {
@@ -333,9 +309,9 @@ router.get("/closeProforma/:proformaId", async function (req, res) {
 });
 
 //delete proforma
-router.delete("/deleteProforma/:proformaId", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.delete("/deleteProforma/:proformaId",auth, async function (req, res) {
+  const tok = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to close the proformas"
@@ -369,9 +345,9 @@ router.delete("/deleteProforma/:proformaId", async function (req, res) {
   }
 });
 
-router.post("/addItem/:proformaId", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || null)) {
+router.post("/addItem/:proformaId",auth, async function (req, res) {
+  const tok = req.user._id;
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must to login to add item to the profoma"
@@ -388,7 +364,7 @@ router.post("/addItem/:proformaId", async function (req, res) {
           //throw err;
           res.send("error: "+err);
 
-        } else if (pr == null || pr.userId != tok) {
+        } else if (pr == null || (pr.userId != tok)) {
           res.send("you cannot add item to proforma");
         } else {
           if (req.body.items == null || req.body.items == "") {
@@ -420,8 +396,8 @@ router.post("/addItem/:proformaId", async function (req, res) {
   }
 });
 
-router.get("/getItem/:itemId", async function (req, res) {
-  if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getItem/:itemId",auth, async function (req, res) {
+  if (req.user._id == "" || req.user._id == null) {
     res.json({
       sucess: false,
       message: "you must log in"
@@ -447,8 +423,8 @@ router.get("/getItem/:itemId", async function (req, res) {
   }
 });
 
-router.get("/getItems/:proformaId", async function (req, res) {
-  if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getItems/:proformaId",auth, async function (req, res) {
+  if (req.user._id == "" || req.user._id == null) {
     res.json({
       sucess: false,
       message: "you must log in"
@@ -471,14 +447,16 @@ router.get("/getItems/:proformaId", async function (req, res) {
 
 });
 
-router.post("/sendResponse", async function (req, res) {
+router.post("/sendResponse",auth, async function (req, res) {
+  const tok = req.user._id;
+
   var response = Response();
-  response.userId = req.token.userId;
+  response.userId = req.user._id;
   response.itemId = req.body.itemId;
   response.unitPrice = req.body.unitPrice;
-  const tok = req.token.userId;
 
-  if ((req.token.userId = "" || null)) {
+  
+  if ((req.user._id = "" || null)) {
     res.json({
       sucess: false,
       message: "You must login in to respond to proforma"
@@ -535,8 +513,9 @@ router.post("/sendResponse", async function (req, res) {
   }
 });
 //get response
-router.get("/getResponse/:responseId", async function (req, res) {
-  if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getResponse/:responseId",auth, async function (req, res) {
+  const tok = req.user._id;
+  if (req.user._id == "" || req.user._id == null) {
     res.json({
       sucess: false,
       message: "you must log in"
@@ -546,7 +525,7 @@ router.get("/getResponse/:responseId", async function (req, res) {
     await Proforma.findOne({ "response._id": req.params.responseId }, async function (err, proformaD) {
       if (err) {
         throw err;
-      } else if (proformaD == null) {
+      } else if (proformaD == null || (proformaD.userId != tok)) {
 
         res.send("no response found.");
       } else {
@@ -563,18 +542,19 @@ router.get("/getResponse/:responseId", async function (req, res) {
   }
 });
 //get responses
-router.get("/getProformaResponses/:proformaId", async function (req, res) {
-  if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getProformaResponses/:proformaId",auth, async function (req, res) {
+   const tok = req.user._id;
+  if (req.user._id == "" || req.user._id == null) {
     res.json({
       sucess: false,
       message: "you must log in"
     });
   } else {
 
-    await Proforma.findOne({ _id: req.params.proformaId, userId: req.token.userId }, async function (err, proformaD) {
+    await Proforma.findOne({ _id: req.params.proformaId, userId: tok }, async function (err, proformaD) {
       if (err) {
         throw err;
-      } else if (proformaD == null) {
+      } else if (proformaD == null || (proformaD.userId != tok)) {
 
         res.send("no response found.");
       } else {
@@ -604,15 +584,16 @@ router.get("/getProformaResponses/:proformaId", async function (req, res) {
 });
 
 //get responses
-router.get("/getResponses/:itemId", async function (req, res) {
-  if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getResponses/:itemId",auth, async function (req, res) {
+  const tok = req.user._id;
+  if (req.user._id == "" || req.user._id == null) {
     res.json({
       sucess: false,
       message: "you must log in"
     });
   } else {
 
-    await Proforma.findOne({ "response.itemId": req.params.itemId, "items._id": req.params.itemId, userId: req.token.userId }, async function (err, proformaD) {
+    await Proforma.findOne({ "response.itemId": req.params.itemId, "items._id": req.params.itemId, userId: tok }, async function (err, proformaD) {
       if (err) {
         throw err;
       } else if (proformaD == null) {

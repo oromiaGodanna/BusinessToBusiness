@@ -6,6 +6,7 @@ require('dotenv').config();
 function auth(req, res, next) {
 
     const token = req.header('token');
+    //const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmMwMDZmNzFlYmJhMTM0YzgwYzllODkiLCJmaXJzdE5hbWUiOiJleWVydXMiLCJsYXN0TmFtZSI6Inpld2R1IiwiZW1haWwiOiJleWVydXMxMjNAZ21haWwuY29tIiwidXNlclR5cGUiOiJBZG1pbiIsIndpc2hMaXN0SWQiOm51bGwsImNhcnRJZCI6bnVsbCwiaWF0IjoxNjA2ODIxOTc5fQ.meEkyK50694PAreEh9mnBaFKSLgyqBbhw8H_wX0nxys";
     if(!token) return res.status(401).send('Access Denied.No Token Provided. ');
     try{
         const decodedToken = jwt.verify(token, process.env.jwtPrivateKey);

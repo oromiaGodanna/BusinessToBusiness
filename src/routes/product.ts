@@ -4,8 +4,10 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const { Product, Filter, validateProduct } = require('../models/product');
-//const User = require('../models/User');
-//const Order = require('../models/order');
+
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
+
 const multer = require('multer');
 var imageNames = [];
 
@@ -29,34 +31,6 @@ const upload = multer({ storage: storage })
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-  var token = {
-    userId: "user1211143",
-    userType: "seller"
-  };
-        /*  
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-  if (token) {
-    req.token = token;
-    next();
-  } else {
-    res.json({ sucess: false, message: "No Token was provided" });
-  }
-});
 
 router.post('/file', upload.array('file'), (req, res, next) => {
   const file = req.file;
@@ -69,21 +43,9 @@ router.post('/file', upload.array('file'), (req, res, next) => {
     res.send(file);
 })
 
-router.post("/createProduct", upload.array('images'), async function (req, res) {
+router.post("/createProduct", upload.array('images'),auth, async function (req, res) {
   var product = Product();
-  product.userId = req.token.userId;
-  /*product.productName = req.body.productName;
-  product.productCategory = req.body.productCategory;
-  product.productSubCategory = req.body.productSubCategory;
-  product.description = req.body.description;
-  product.minOrder = req.body.minOrder;
-  product.price = req.body.price;
-  product.keyword = req.body.keyword;
-  product.images = req.body.images;
-  product.additionalProductInfo = req.body.additionalProductInfo;
-  product.createDate = req.body.createDate;
-  const image = req.body.image;
-  console.log(image);*/
+  product.userId = req.user._id;
 
   product.productName = req.body.productName;
   product.productCategory = req.body.productCategory;
@@ -99,7 +61,8 @@ router.post("/createProduct", upload.array('images'), async function (req, res) 
   //const images = req.images;
   //console.log(this.images);
   imageNames=[];
-  if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
+ 
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
     res.json({
       sucess: false,
       message: "You must to login to add product and you must be seller"
@@ -124,10 +87,10 @@ router.post("/createProduct", upload.array('images'), async function (req, res) 
   }
 });
 
-router.post("/updateProduct/:id", async function (req, res) {
+router.post("/updateProduct/:id",auth, async function (req, res) {
 
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("seller"))) {
+  const tok = req.user._id;
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
     res.json({
       sucess: false,
       message: "You must to login to update product and you must be seller"
@@ -136,22 +99,25 @@ router.post("/updateProduct/:id", async function (req, res) {
   } else {
 
     const { error } = validateProduct(req.body);
-   console.log(req.body.productName);
-   console.log(req.productName);
-    console.log(req.body.minOrder);
+   //console.log(req.body.productName);
+   //console.log(req.productName);
+   // console.log(req.body.minOrder);
     if (error) {
       return res.status(400).send(error.details[0].message);
 
     } else {
       //console.log(tok);
       await Product.findOne({ _id: req.params.id }, async function (err, product) {
+        //console.log(product.userId);
+         //console.log(tok);
+        // console.log(product.userId.localeCompare( tok ));
         if (err) {
           throw err;
 
         } else if (product == null) {
           res.json({ sucess: true, message: "product not found" });
 
-        } else if (product.userId != tok) {
+        } else if ((product.userId.localeCompare( tok )) != 0) {
           //console.log(tok);
           res.send("you cannot update the product");
 
@@ -232,16 +198,17 @@ router.post("/getProducts", async function (req, res) {
 });
 
 
-router.get("/getProductSeller/:userId", async function (req, res) {
+router.get("/getProductSeller/:userId",auth, async function (req, res) {
 
-  if (req.token.userId.localeCompare(req.params.userId) || (req.token.userType.localeCompare("seller"))) {
+  var tokUserId = req.user._id;
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
     res.json({
       sucess: false,
       message: "You must to login to get your products and you must be seller"
     });
 
   } else {
-    await Product.find({ userId: req.params.userId,deleted:false }, async function (err, product) {
+    await Product.find({ userId: tokUserId,deleted:false }, async function (err, product) {
       if (err) {
         throw err;
       } else if (product == null) {
@@ -303,9 +270,10 @@ router.get("/getRelatedProductBySubCategory/:productSubCategory/:offset/:limit",
 });
 
 
-router.delete("/deleteProduct/:id", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId == "" || null) || (req.token.userType.localeCompare("seller"))) {
+router.delete("/deleteProduct/:id",auth, async function (req, res) {
+  
+  const tok =req.user._id;
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
     res.json({
       success: false,
       message: "You must to login to delete the product and you must be the product's seller"
@@ -319,8 +287,8 @@ router.delete("/deleteProduct/:id", async function (req, res) {
       } else if (product == null) {
         res.json({ success: true, message: "product not found" });
 
-      } else if (product.userId != tok) {
-        console.log(req.token.userId);
+      } else if ((product.userId.localeCompare( tok )) != 0) {
+       
         res.send("you cannot delete the product");
 
       } else {

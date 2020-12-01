@@ -48,10 +48,10 @@ const review = require('./routes/review')
 const order = require('./routes/order');
 const payment = require('./routes/payment')
 
-// if(!process.env.jwtPrivateKey){
-//   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
-//   process.exit(1);
-// }
+if(!process.env.jwtPrivateKey){
+   console.error('FATAL ERROR: jwtPrivateKey is not defined.');
+   process.exit(1);
+}
 
 // sockets
 const MessageSocket = require('./realtime/messageSocket');

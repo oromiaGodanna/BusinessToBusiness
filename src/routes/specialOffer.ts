@@ -4,45 +4,19 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 var { Product } = require('../models/product');
 var { SpecialOffer, validateSpecialOffer } = require('../models/specialOffer');
-//const WishList = require('../models/wishList');
-//const User = require('../models/User');
-//const mongoose = require('mongoose');
+
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
+
 var foundProducts = [];
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-    var token = {
-        userId: "user1211143",
-        userType: "seller"
-    };
-        /*
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-    if (token) {
-        req.token = token;
-        next();
-    } else {
-        res.json({ sucess: false, message: "No Token was provided" });
-    }
-});
 
-router.post("/createSpecialOffer", async function (req, res) {
+router.post("/createSpecialOffer",auth, async function (req, res) {
+    var tokId = req.user._id;
     var specialOffer = SpecialOffer();
-    specialOffer.userId = req.token.userId;
+    specialOffer.userId = req.user._id;
     specialOffer.productId = req.body.productId;
     specialOffer.title = req.body.title;
     specialOffer.discount = req.body.discount;
@@ -51,7 +25,7 @@ router.post("/createSpecialOffer", async function (req, res) {
 
     const { error } = validateSpecialOffer(req.body);
 
-    if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "You must login to add special offer to product"
@@ -63,11 +37,12 @@ router.post("/createSpecialOffer", async function (req, res) {
     } else {
 
         await Product.findOne({ _id: req.body.productId }, async function (err, productInfo) {
+
             if (err) {
                 throw err;
             }
             //|| (productInfo.userId.localeCompare(req.token.userId) )
-            else if ((productInfo == null || !(productInfo.userId.localeCompare(req.token.userId)))) {
+            else if ((productInfo == null || (productInfo.userId.localeCompare(tokId) != 0))) {
                 res.json({
                     sucess: false,
                     message: "Sorry,The product you wish to add special offer to, is not found"
@@ -103,9 +78,9 @@ router.post("/createSpecialOffer", async function (req, res) {
     }
 });
 
-router.post("/openSpecialOffer/:specialOfferId", async function (req, res) {
-
-    if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
+router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) {
+    var tokId = req.user._id;
+    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "You must login to open special offer"
@@ -117,7 +92,7 @@ router.post("/openSpecialOffer/:specialOfferId", async function (req, res) {
             if (err) {
                 throw err;
             }
-            else if (productInfo == null || !(productInfo.userId.localeCompare(req.token.userId))) {
+            else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
                 res.json("you cannot open the special offer");
 
@@ -164,9 +139,9 @@ router.post("/openSpecialOffer/:specialOfferId", async function (req, res) {
     }
 });
 
-router.post("/closeSpecialOffer/:specialOfferId", async function (req, res) {
-
-    if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
+router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res) {
+     var tokId = req.user._id;
+    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "You must login to close special offer"
@@ -178,7 +153,7 @@ router.post("/closeSpecialOffer/:specialOfferId", async function (req, res) {
             if (err) {
                 throw err;
             }
-            else if (productInfo == null || !(productInfo.userId.localeCompare(req.token.userId))) {
+            else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
                 res.json("you cannot close the special offer");
 
@@ -219,9 +194,9 @@ router.post("/closeSpecialOffer/:specialOfferId", async function (req, res) {
     }
 });
 
-router.delete("/deleteOffer/:productId", async function (req, res) {
-
-    if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
+router.delete("/deleteOffer/:productId",auth, async function (req, res) {
+    var tokId = req.user._id;
+    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "You must login to delete the special offer"
@@ -232,7 +207,7 @@ router.delete("/deleteOffer/:productId", async function (req, res) {
             if (err) {
                 throw err;
             }
-            else if (productInfo == null || !(productInfo.userId.localeCompare(req.token.userId))) {
+            else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
                 res.json("you cannot delete the special offer");
 
@@ -268,9 +243,9 @@ router.delete("/deleteOffer/:productId", async function (req, res) {
 
 });
 
-router.delete("/deleteProduct/:productId", async function (req, res) {
-
-    if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
+router.delete("/deleteProduct/:productId",auth, async function (req, res) {
+    var tokId = req.user._id;
+   if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "You must login to delete the special offer"
@@ -281,7 +256,7 @@ router.delete("/deleteProduct/:productId", async function (req, res) {
             if (err) {
                 throw err;
             }
-            else if (productInfo == null || !(productInfo.userId.localeCompare(req.token.userId))) {
+            else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
                 res.json("you cannot delete the special offer");
 
@@ -326,15 +301,15 @@ router.delete("/deleteProduct/:productId", async function (req, res) {
 });
 
 
-router.get("/getPendingSpecialOffer", async function (req, res) {
-   
-    if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getPendingSpecialOffer",auth, async function (req, res) {
+       var tokId = req.user._id;
+     if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "you must log in"
         });
     } else {
-        await SpecialOffer.find({ userId: req.token.userId ,status:false}, async function (err, specialOffer) {
+        await SpecialOffer.find({ userId: tokId ,status:false}, async function (err, specialOffer) {
             if (err) throw err;
            
            //let foundProducts = [];
@@ -356,15 +331,15 @@ router.get("/getPendingSpecialOffer", async function (req, res) {
     }
 });
 
-router.get("/getMyActiveSpecialOffer", async function (req, res) {
-  
-    if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getMyActiveSpecialOffer",auth, async function (req, res) {
+  var tokId = req.user._id;
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "you must log in"
         });
     } else {
-        await SpecialOffer.find({ userId: req.token.userId ,status:true}, async function (err, specialOffer) {
+        await SpecialOffer.find({ userId: tokId ,status:true}, async function (err, specialOffer) {
             if (err) throw err;
 
           

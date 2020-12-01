@@ -6,49 +6,30 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 var {Product} = require('../models/product');
 var {WishList,validateWishListProduct} = require('../models/wishList');
-//const User = require('../models/User');
-//const mongoose = require('mongoose');
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-  var token = {
-    userId: "user121413",
-    wishListId: "5fb16e5e53aee62d343fde60",
-  };
-        /*
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-  if (token) {
-    req.token = token;
-    next();
-  } else {
-    res.json({ sucess: false, message: "No Token was provided" });
-  }
+
+router.get("/check",auth, async function (req, res) {
+    
+    var customer = await Customer.findOne({ _id: req.user._id }).select('wishListId');
+    res.send(req.user);
 });
 
-router.post("/addToWishList", async function (req, res) {
+
+router.post("/addToWishList",auth, async function (req, res) {
+     
+
   var wishList = WishList();
   // wishList.wishListId = req.token.wishListId;
   wishList.productIds = req.body.productIds;
 
-  if (req.token.userId == "" || req.token.userId == null) {
+  if (req.user._id == "" || req.user._id == null || req.user.userType == 'Admin' || req.user.userType == 'Seller' ) {
     res.json({
       success: false,
-      message: "you must log in"
+      message: "you must log in and you must be either customer or both"
     });
   } else {
 
@@ -70,7 +51,12 @@ router.post("/addToWishList", async function (req, res) {
         });
       } else {
 
-       await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishL) {
+
+       const customer = await Buyer.findOne({ _id: req.user._id }).select('wishListId');
+       //console.log("customer wishListId " + customer.wishListId );
+
+       await WishList.findOne({ _id: customer.wishListId }, async function (err, wishL) {
+           console.log(wishL);
           if (err) {
             throw err;
           }
@@ -81,15 +67,23 @@ router.post("/addToWishList", async function (req, res) {
               if (err) {
                 res.json({ success: false,type:false,message: err });
               } else {
-                /* User.updateOne({_id:req.token.userId},{$set:{wishListId:createdWishList._id}},function(err,User){
-             if(err){
-               throw err;
-             }else{
-              //update token too.
-             }
-           });*/
-               // res.json({ sucess: true, message: "product added to wishlist " + createdWishList });
-               res.json({ success: true,type:true,message: 'product added to wishlist' });
+
+              //Buyer.updateOne({_id:req.user._id},{$set:{wishListId:createdWishList._id}});
+               //console.log(createdWishList._id);
+                Buyer.updateOne({ _id:req.user._id }, {
+
+                  $set: {
+                      wishListId : createdWishList._id
+                  }
+                }, function (err, productD) {
+                  if (err) {
+                     res.json({ success: false,type:false,message: err });
+                  }
+                  else{
+                     res.json({ success: true,type:true,message: 'product added to wishlist' });
+                  } 
+                });
+
               }
             });
           } else {
@@ -100,13 +94,13 @@ router.post("/addToWishList", async function (req, res) {
             } else {
 
              await WishList.updateOne(
-               { _id: req.token.wishListId }, 
+               { _id: customer.wishListId }, 
                { $addToSet: { productIds: req.body.productIds } 
               }, async function (err, w) {
                 if (err) {
                   res.json({ success: false,type:false, message: err });
                 } else {
-                  res.json({ success: true,type:true, message: "product added to wishlist" });
+                  res.json({ success: true,type:true, message: "Wishlist found.product added to wishlist" });
                 }
                 //res.redirect("/products");
               });
@@ -132,15 +126,17 @@ router.post("/addToWishList", async function (req, res) {
   }
 });*/
 
-router.get("/getWishList", async function (req, res) {
-  if (req.token.userId == "" || req.token.userId == null) {
+router.get("/getWishList",auth, async function (req, res) {
+ if (req.user._id == "" || req.user._id == null || req.user.userType == 'Admin' || req.user.userType == 'Seller' ) {
     res.json({
       sucess: false,
       message: "you must log in"
     });
   } else {
-   
-    await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishListD) {
+
+    const customer = await Buyer.findOne({ _id: req.user._id }).select('wishListId');
+
+    await WishList.findOne({ _id:customer.wishListId }, async function (err, wishListD) {
       if (err) {
         throw err;
       } else if (wishListD == null) {
@@ -173,21 +169,20 @@ router.get("/getWishList", async function (req, res) {
   }
 });
 
-router.delete("/removeFromWishList/:id", async function (req, res) {
+router.delete("/removeFromWishList/:id",auth, async function (req, res) {
 
-  if (req.token.userId == "" || req.token.userId == null) {
+  if (req.user._id == "" || req.user._id == null || req.user.userType == 'Admin' || req.user.userType == 'Seller' ) {
     res.json({
       sucess: false,
       message: "you must log in"
     });
   } else {
-    await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishL) {
+    const customer = await Buyer.findOne({ _id: req.user._id }).select('wishListId');
+    await WishList.findOne({ _id: customer.wishListId }, async function (err, wishL) {
       if (err) {
         throw err;
-      }else if(req.token.wishListId != wishL._id){
-        res.send("you cannot delete product from wishlist");
       }else{
-      await WishList.updateOne({ _id: req.token.wishListId }, { $pull: { productIds: { $in: req.params.id } } }, async function (err, product) {
+      await WishList.updateOne({ _id: customer.wishListId }, { $pull: { productIds: { $in: req.params.id } } }, async function (err, product) {
         if (err) {
           res.json({ sucess: false, message: err });
         } else {
@@ -200,15 +195,17 @@ router.delete("/removeFromWishList/:id", async function (req, res) {
   }
 });
 
-router.get("/countProductInWishlist", async function (req, res) {
+router.get("/countProductInWishlist",auth, async function (req, res) {
 
-  if (req.token.userId == "" || req.token.userId == null) {
+ if (req.user._id == "" || req.user._id == null || req.user.userType == 'Admin' || req.user.userType == 'Seller' ) {
     res.json({
       sucess: false,
       message: "you must log in"
     });
   } else {
-    await WishList.findOne({ _id: req.token.wishListId }, async function (err, wishL) {
+    const customer = await Buyer.findOne({ _id: req.user._id }).select('wishListId');
+
+    await WishList.findOne({ _id: customer.wishListId }, async function (err, wishL) {
       if (err) {
         throw err;
       }else if(wishL == null){

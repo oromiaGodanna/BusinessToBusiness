@@ -3,8 +3,10 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 var {Category,SubCategory} = require('../models/category');
-//const User = require('../models/User');
-//const Order = require('../models/order');
+
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
+
 const mongoose = require('mongoose');
 const multer = require('multer');
 const fs = require('fs');
@@ -28,43 +30,15 @@ const upload = multer({ storage: storage })
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-  var token = {
-    userId: "user1211143",
-    userType: "admin"
-  };
-        /*  
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-  if (token) {
-    req.token = token;
-    next();
-  } else {
-    res.json({ sucess: false, message: "No Token was provided" });
-  }
-});
 
-router.post("/addCategory", upload.single('image'), async function (req, res) {
+router.post("/addCategory", upload.single('image'),auth, async function (req, res) {
   var category = Category();
   category.name = req.body.categoryName;
   category.subCategories = req.body.subCategories;
   category.image = categoryImage[0];
   categoryImage=[];
 
-  if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("admin"))) {
+ if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
     res.json({
       sucess: false,
       message: "You must to login to add category and you must be admin"
@@ -91,10 +65,10 @@ router.post("/addCategory", upload.single('image'), async function (req, res) {
   }
 });
 
-router.post("/editCategory/:id",upload.single('image'), async function (req, res) {
+router.post("/editCategory/:id",upload.single('image'),auth, async function (req, res) {
 
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("admin"))) {
+  //const tok = req.token.userId;
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
     res.json({
       sucess: false,
       message: "You must to login to update category and you must be admin"
@@ -171,9 +145,9 @@ router.get("/getCategory/:id", async function (req, res) {
   });
 });
 
-router.delete("/deleteCategory/:id", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId=="" || null) || (req.token.userType.localeCompare("admin"))) {
+router.delete("/deleteCategory/:id",auth, async function (req, res) {
+  //const tok = req.token.userId;
+ if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
     res.json({
       sucess: false,
       message: "You must to login to delete the category and you must be admin"

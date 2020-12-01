@@ -3,46 +3,20 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 var {Measurement} = require('../models/measurement');
-//const User = require('../models/User');
-//const Order = require('../models/order');
+
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
+
 const mongoose = require('mongoose');
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-  var token = {
-    userId: "user1211143",
-    userType: "admin"
-  };
-        /*  
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-  if (token) {
-    req.token = token;
-    next();
-  } else {
-    res.json({ sucess: false, message: "No Token was provided" });
-  }
-});
 
-router.post("/addMeasurement", async function (req, res) {
+router.post("/addMeasurement",auth, async function (req, res) {
   var measurement = Measurement();
   measurement.name = req.body.measurementName;
   
-  if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("admin"))) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
     res.json({
       sucess: false,
       message: "You must to login to add Measurement and you must be admin"
@@ -68,10 +42,10 @@ router.post("/addMeasurement", async function (req, res) {
   }
 });
 
-router.post("/editMeasurement/:id", async function (req, res) {
+router.post("/editMeasurement/:id",auth, async function (req, res) {
 
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("admin"))) {
+  const tok = req.user._id;
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
     res.json({
       sucess: false,
       message: "You must to login to update Measurement and you must be admin"
@@ -115,8 +89,8 @@ router.post("/editMeasurement/:id", async function (req, res) {
   }
 });
 
-router.get("/getMeasurements", async function (req, res) {
-    if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("admin"))) {
+router.get("/getMeasurements",auth, async function (req, res) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
           sucess: false,
           message: "You must to login to get Measurement and you must be admin"
@@ -130,8 +104,8 @@ router.get("/getMeasurements", async function (req, res) {
       }
 });
 
-router.get("/getMeasurement/:id", async function (req, res) {
-    if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("admin"))) {
+router.get("/getMeasurement/:id",auth, async function (req, res) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
           sucess: false,
           message: "You must to login to get Measurement and you must be admin"
@@ -150,9 +124,9 @@ router.get("/getMeasurement/:id", async function (req, res) {
     }
 });
 
-router.delete("/deleteMeasurement/:id", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId=="" || null) || (req.token.userType.localeCompare("admin"))) {
+router.delete("/deleteMeasurement/:id",auth, async function (req, res) {
+  //const tok = req.token.userId;
+ if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
     res.json({
       sucess: false,
       message: "You must to login to delete the Measurement and you must be admin"
