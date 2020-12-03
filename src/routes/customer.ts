@@ -113,6 +113,7 @@ router.post('/login', async (req, res) => {
 
     const validPassword = await bcyrpt.compare(req.body.password, customer.password);
     if (!validPassword) return res.status(400).send('Invalid Email or password');
+
     const token = generateAuthToken(customer);
     res.header('token', token).json({
         status: 200,
@@ -202,19 +203,25 @@ router.get('/filter/:filters', async (req, res) => {
 
 //complete Profile
 router.put('/updateProfile/:id', async (req, res) => {
-    // if (req.body.userType == "Buyer") {
-    //     const { error } = validateBuyer(req.body);
-    //     if (error) return res.status(400).send(error.details[0].message);
-    // } else if (req.body.userType == "Seller") {
-    //     console.log('if seller');
-    //     const { error } = validateSeller(req.body);
-    //     if (error) return res.status(400).send(error.details[0].message);
-    // } else if (req.body.userType = "Both") {
-    //     const { error } = validateBoth(req.body);
-    //     if (error) return res.status(400).send(error.details[0].message);
-    // }
-    try {
-        const customer = await Customer.updateOne({_id: req.params.id}, {$set: req.body});
+    try{
+        let customer;
+    if (req.body.userType == "Buyer") {
+        const { error } = validateBuyer(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
+        customer = await Buyer.updateOne({_id: req.params.id}, {$set: req.body});
+
+    } else if (req.body.userType == "Seller") {
+        console.log('if seller');
+        const { error } = validateSeller(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
+        customer = await Seller.updateOne({_id: req.params.id}, {$set: req.body});
+
+    } else if (req.body.userType = "Both") {
+        const { error } = validateBoth(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
+        customer = await Both.updateOne({_id: req.params.id}, {$set: req.body});
+    }
+        //const customer = await Both.updateOne({_id: req.params.id}, {$set: req.body});
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
         console.log(customer);
         res.json({
