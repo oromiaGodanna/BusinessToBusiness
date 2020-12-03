@@ -2,12 +2,11 @@ export { };
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-var {Category,SubCategory} = require('../models/category');
-
+const {Category,SubCategory} = require('../models/category');
+const mongoose = require('mongoose');
 const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
 const { auth } = require('../middleware/auth');
 
-const mongoose = require('mongoose');
 const multer = require('multer');
 const fs = require('fs');
 var categoryImage = [];
@@ -39,7 +38,7 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
   categoryImage=[];
 
  if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
-    res.json({
+  res.status(401).json({
       sucess: false,
       message: "You must to login to add category and you must be admin"
     });
@@ -47,7 +46,7 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
   } else {
 
     if (req.body.categoryName == null || req.body.categoryName == "") {
-      res.json({
+      res.status(400).json({
         sucess: false,
         message: "Ensure all fields are provided"
       });
@@ -55,10 +54,10 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
       
       await category.save(async function (err,categoryCreated) {
         if (err) {
-          res.json({ sucess: false, message: err });
+          res.status(500).json({ sucess: false, message: err });
         } else {
 
-          res.json(categoryCreated);
+          res.status(200).json(categoryCreated);
         }
       });
     }
@@ -67,9 +66,13 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
 
 router.post("/editCategory/:id",upload.single('image'),auth, async function (req, res) {
 
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
+  }
+
   //const tok = req.token.userId;
   if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
-    res.json({
+    res.status(401).json({
       sucess: false,
       message: "You must to login to update category and you must be admin"
     });
@@ -77,7 +80,7 @@ router.post("/editCategory/:id",upload.single('image'),auth, async function (req
   } else {
 
     if (req.body.categoryName == null || req.body.categoryName == "" ) {
-      res.json({
+       res.status(400).json({
         sucess: false,
         message: "Ensure all fields are provided"
       });
@@ -88,7 +91,7 @@ router.post("/editCategory/:id",upload.single('image'),auth, async function (req
           throw err;
   
         }else if(category == null){
-          res.json({ sucess: true, message: "category not found" });
+          res.status(404).json({ sucess: true, message: "category not found" });
   
         }else {
 
@@ -113,9 +116,9 @@ router.post("/editCategory/:id",upload.single('image'),auth, async function (req
             }
           }, async function (err, categoryD) {
             if (err) {
-              res.json({ sucess: false, message: err });
+              res.status(500).json({ sucess: false, message: err });
             } else {
-              res.json({ sucess: true, message: categoryD } );
+              res.status(200).json({ sucess: true, message: categoryD } );
             }
             //res.redirect("/products");
           });
@@ -128,27 +131,37 @@ router.post("/editCategory/:id",upload.single('image'),auth, async function (req
 router.get("/getCategories", async function (req, res) {
   await Category.find({}, async function (err, category) {
     if (err) throw err;
-    res.send(category);
-  }).sort('createDate');
+    res.status(200).send(category);
+  }).sort('-createDate');
 });
 
 router.get("/getCategory/:id", async function (req, res) {
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
+  }
+
   Category.findOne({ _id: req.params.id }, async function (err, category) {
     if (err) {
       throw err;
     } else if (category == null) {
-      res.send("category not found");
+      res.status(404).send("category not found");
     } else {
-      res.send(category);
+      res.status(200).send(category);
     }
 
   });
 });
 
 router.delete("/deleteCategory/:id",auth, async function (req, res) {
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
+  }
+
   //const tok = req.token.userId;
  if ((req.user._id = "" || null) || (req.user.userType != 'Admin')) {
-    res.json({
+    res.status(401).json({
       sucess: false,
       message: "You must to login to delete the category and you must be admin"
     });
@@ -159,15 +172,15 @@ router.delete("/deleteCategory/:id",auth, async function (req, res) {
         throw err;
 
       }else if(category == null){
-        res.json({ sucess: true, message: "category not found" });
+        res.status(404).json({ sucess: true, message: "category not found" });
 
       }else {
         fs.unlinkSync("../b2b/bTob/src/assets/images/categoryImages/"+category.image);
        await Category.deleteOne({ _id: req.params.id }, async function (err, ret) {
           if (err) {
-            res.json({ sucess: false, message: err });
+            res.status(500).json({ sucess: false, message: err });
           } else {
-            res.json({ sucess: true, message: "Category deleted" });
+            res.status(200).json({ sucess: true, message: "Category deleted" });
           }
         });
         //res.redirect("/products");  

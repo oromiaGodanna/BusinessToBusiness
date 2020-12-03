@@ -4,7 +4,7 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 var { Product } = require('../models/product');
 var { SpecialOffer, validateSpecialOffer } = require('../models/specialOffer');
-
+const mongoose = require('mongoose');
 const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
 const { auth } = require('../middleware/auth');
 
@@ -23,10 +23,12 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
     specialOffer.startDate = req.body.startDate;
     specialOffer.endDate = req.body.endDate;
 
+   
+
     const { error } = validateSpecialOffer(req.body);
 
     if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.json({
+        res.status(401).json({
             sucess: false,
             message: "You must login to add special offer to product"
         });
@@ -36,6 +38,10 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
 
     } else {
 
+        if (!mongoose.Types.ObjectId.isValid(req.body.productId)) {
+            return res.status(400).send('Invalid Id.');
+        }
+        
         await Product.findOne({ _id: req.body.productId }, async function (err, productInfo) {
 
             if (err) {
@@ -43,7 +49,7 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
             }
             //|| (productInfo.userId.localeCompare(req.token.userId) )
             else if ((productInfo == null || (productInfo.userId.localeCompare(tokId) != 0))) {
-                res.json({
+                res.status(404).json({
                     sucess: false,
                     message: "Sorry,The product you wish to add special offer to, is not found"
                 });
@@ -55,7 +61,7 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
                         throw err;
                     }
                     else if (specialOfferD != null) {
-                        res.json({
+                        res.status(200).json({
                             sucess: false,
                             message: "The product is already on special offer"
                         });
@@ -63,10 +69,10 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
                     else {
                         await specialOffer.save(async function (err, specialOffer) {
                             if (err) {
-                                res.json({ sucess: false, message: err });
+                                res.status(500).json({ sucess: false, message: err });
                             } else {
                                 
-                                res.json({ sucess: true, message: specialOffer + "/n" + "special offer is added to the product" });
+                                res.status(200).json({ sucess: true, message: specialOffer + "/n" + "special offer is added to the product" });
                             }
                         });
                     }
@@ -79,9 +85,14 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
 });
 
 router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.specialOfferId)) {
+        return res.status(400).send('Invalid Id.');
+    }
+
     var tokId = req.user._id;
     if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.json({
+        res.status(401).json({
             sucess: false,
             message: "You must login to open special offer"
         });
@@ -94,7 +105,7 @@ router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) 
             }
             else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
-                res.json("you cannot open the special offer");
+                res.status(404).json("you cannot open the special offer");
 
             } else {
 
@@ -103,7 +114,7 @@ router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) 
                         throw err;
                     } else if (specialOfferD == null) {
 
-                        res.json("you cannot open the special offer since the offer isnot created yet");
+                        res.status(404).json("you cannot open the special offer since the offer isnot created yet");
                     } else {
 
                        
@@ -115,7 +126,7 @@ router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) 
                             }
                         }, async function (err, specialOffer) {
                             if (err) {
-                                res.json({ sucess: false, message: err });
+                                res.status(500).json({ sucess: false, message: err });
                             } else {
                              
                                 await Product.updateOne(
@@ -125,7 +136,7 @@ router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) 
                                             throw err;
                                         }
                                     });
-                                    res.json({ sucess: true, message: "special offer is open now" });
+                                    res.status(200).json({ sucess: true, message: "special offer is open now" });
                              
                             }
                             //res.redirect("/products");
@@ -140,9 +151,14 @@ router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) 
 });
 
 router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res) {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.specialOfferId)) {
+        return res.status(400).send('Invalid Id.');
+    }
+
      var tokId = req.user._id;
     if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.json({
+        res.status(401).json({
             sucess: false,
             message: "You must login to close special offer"
         });
@@ -155,7 +171,7 @@ router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res)
             }
             else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
-                res.json("you cannot close the special offer");
+                res.status(404).json("you cannot close the special offer");
 
             } else {
 
@@ -164,7 +180,7 @@ router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res)
                         throw err;
                     } else if (specialOfferD == null) {
 
-                        res.json("you cannot close the special offer since the offer isnot created yet");
+                        res.status(404).json("you cannot close the special offer since the offer isnot created yet");
                     } else {
 
                         await SpecialOffer.updateOne({ _id: req.params.specialOfferId }, {
@@ -176,12 +192,12 @@ router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res)
                             }
                         }, async function (err, specialOffer) {
                             if (err) {
-                                res.json({ sucess: false, message: err });
+                                res.status(500).json({ sucess: false, message: err });
                             } else {
                                 if (req.body.endDate != null) {
-                                    res.json(specialOffer.endDate);
+                                    res.status(500).json(specialOffer.endDate);
                                 }
-                                res.json({ sucess: true, message: "special offer is closed now" });
+                                res.status(200).json({ sucess: true, message: "special offer is closed now" });
                             }
                             //res.redirect("/products");
                         });
@@ -195,9 +211,15 @@ router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res)
 });
 
 router.delete("/deleteOffer/:productId",auth, async function (req, res) {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.productId)) {
+        return res.status(400).send('Invalid Id.');
+    }
+
+
     var tokId = req.user._id;
     if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.json({
+        res.status(401).json({
             sucess: false,
             message: "You must login to delete the special offer"
         });
@@ -209,18 +231,18 @@ router.delete("/deleteOffer/:productId",auth, async function (req, res) {
             }
             else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
-                res.json("you cannot delete the special offer");
+                res.status(404).json("you cannot delete the special offer");
 
             } else {
 
                 await SpecialOffer.find({ productId: req.params.productId }, async function (err, specialOfferD) {
                     if (specialOfferD == null) {
 
-                        res.json("you cannot delete the special offer since the offer has not been created yet");
+                        res.status(404).json("you cannot delete the special offer since the offer has not been created yet");
                     } else {
                         await SpecialOffer.deleteOne({ productId: req.params.productId }, async function (err, ret) {
                             if (err) {
-                                res.json({ sucess: false, message: err });
+                                res.status(500).json({ sucess: false, message: err });
                             } else {
                                 //res.json({ sucess: true, message: "special offer deleted" });
                                 await Product.updateOne(
@@ -230,7 +252,7 @@ router.delete("/deleteOffer/:productId",auth, async function (req, res) {
                                             throw err;
                                         }
                                     });
-                                res.json({ sucess: true, message: "special offer is deleted from the product" });
+                                    res.status(200).json({ sucess: true, message: "special offer is deleted from the product" });
 
                             }
                         });
@@ -304,7 +326,7 @@ router.delete("/deleteProduct/:productId",auth, async function (req, res) {
 router.get("/getPendingSpecialOffer",auth, async function (req, res) {
        var tokId = req.user._id;
      if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.json({
+        res.status(401).json({
             sucess: false,
             message: "you must log in"
         });
@@ -325,7 +347,7 @@ router.get("/getPendingSpecialOffer",auth, async function (req, res) {
            console.log(foundProducts);
            var foundProductsArray = foundProducts;
            foundProducts=[];
-           res.send(foundProductsArray);
+           res.status(200).send(foundProductsArray);
            
         });
     }
@@ -334,7 +356,7 @@ router.get("/getPendingSpecialOffer",auth, async function (req, res) {
 router.get("/getMyActiveSpecialOffer",auth, async function (req, res) {
   var tokId = req.user._id;
   if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.json({
+    res.status(401).json({
             sucess: false,
             message: "you must log in"
         });
@@ -351,7 +373,7 @@ router.get("/getMyActiveSpecialOffer",auth, async function (req, res) {
            console.log(foundProducts);
            var foundProductsArray = foundProducts;
            foundProducts=[];
-           res.send(foundProductsArray);
+           res.status(200).send(foundProductsArray);
 
         });
     }
@@ -375,7 +397,7 @@ router.get("/getAllActiveSpecialOffer", async function (req, res) {
            //return foundRiders;
            var foundProductsArray = foundProducts;
            foundProducts=[];
-           res.send(foundProductsArray);
+           res.status(200).send(foundProductsArray);
 
         });
 
@@ -398,9 +420,9 @@ router.get("/getActiveSpecialOffer/:offset/:limit", async function (req, res) {
        //return foundRiders;
        var foundProductsArray = foundProducts;
        foundProducts=[];
-       res.send(foundProductsArray);
+       res.status(200).send(foundProductsArray);
 
-    }).sort('createDate').skip(offset).limit(limit);
+    }).sort('-createDate').skip(offset).limit(limit);
 
 });
 
@@ -425,9 +447,9 @@ router.get("/getAllActiveSpecialOfferByCategory/:productCategory", async functio
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
-        res.send(foundProductsArray);
+        res.status(200).send(foundProductsArray);
 
-        }).sort('createDate');
+        }).sort('-createDate');
 
    
 
@@ -472,9 +494,9 @@ router.get("/getActiveSpecialOfferByCategory/:productCategory/:offset/:limit", a
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
-        res.send(foundProductsArray);
+        res.status(200).send(foundProductsArray);
 
-        }).sort('createDate').skip(offset).limit(limit);
+        }).sort('-createDate').skip(offset).limit(limit);
 
 });
 
@@ -499,9 +521,9 @@ router.get("/getAllActiveSpecialOfferBySubCategory/:productSubCategory", async f
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
-        res.send(foundProductsArray);
+        res.status(200).send(foundProductsArray);
 
-        }).sort('createDate');
+        }).sort('-createDate');
    
 
 });
@@ -547,13 +569,16 @@ router.get("/getActiveSpecialOfferBySubCategory/:productSubCategory/:offset/:lim
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
-        res.send(foundProductsArray);
+        res.status(200).send(foundProductsArray);
 
-        }).sort('createDate').skip(offset).limit(limit);
+        }).sort('-createDate').skip(offset).limit(limit);
 });
 
 router.get("/getProductInSpecialOffer/:productId", async function (req, res) {
-  
+
+        if (!mongoose.Types.ObjectId.isValid(req.params.productId)) {
+            return res.status(400).send('Invalid Id.');
+        }
   
         await SpecialOffer.findOne({ productId: req.params.productId ,status:true}, async function (err, specialOffer) {
             if (err) throw err;
@@ -571,7 +596,7 @@ router.get("/getProductInSpecialOffer/:productId", async function (req, res) {
            console.log(foundProducts);
            var foundProductsArray = foundProducts;
            foundProducts=[];
-           res.send(foundProductsArray);
+           res.status(200).send(foundProductsArray);
 
         });
  
