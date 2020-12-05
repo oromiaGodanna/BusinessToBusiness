@@ -93,7 +93,7 @@ router.post("/updateProduct/:id",auth, async function (req, res) {
   const tok = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(404).send('Invalid Id.');
+    return res.status(400).send('Invalid Id.');
   }
 
   if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
@@ -106,7 +106,7 @@ router.post("/updateProduct/:id",auth, async function (req, res) {
 
     const { error } = validateProduct(req.body);
     if (error) {
-       res.status(400).send(error.details[0].message);
+       res.status(400).send("Validation error");
 
     }else{
 
@@ -180,7 +180,7 @@ router.get("/getAllProducts", async function (req, res) {
 router.get("/getProduct/:id", async function (req, res) {
 
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(404).send('Invalid Id.');
+    return res.status(400).send('Invalid Id.');
   }
 
   Product.findOne({ _id: req.params.id,deleted:false }, async function (err, product) {
@@ -211,7 +211,7 @@ router.post("/getProducts", async function (req, res) {
 router.get("/getProductSeller/:userId",auth, async function (req, res) {
  
   if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
-    return res.status(404).send('Invalid Id.');
+    return res.status(400).send('Invalid Id.');
   }
 
   var tokUserId = req.user._id;
@@ -284,8 +284,8 @@ router.get("/getRelatedProductBySubCategory/:productSubCategory/:offset/:limit",
 
 router.delete("/deleteProduct/:id",auth, async function (req, res) {
   
-  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
-    return res.status(404).send('Invalid Id.');
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
   }
 
   const tok =req.user._id;
@@ -346,7 +346,7 @@ router.post("/filter/:offset/:limit", async function (req, res) {
    var maxPrice = parseFloat(req.body.maxPrice);
     //console.log(maxPrice);
     if(!productCategory || !productSubCategory || !maxPrice || !(isNumber(maxPrice))){
-      return res.status(404).send('Filter Validation error.');
+      return res.status(400).send('Validation error.');
     }
     await Product.find({
       $and:[{ productCategory:productCategory},

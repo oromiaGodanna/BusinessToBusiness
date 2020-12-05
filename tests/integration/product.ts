@@ -34,22 +34,184 @@ describe(' Product ', () => {
 
     describe('POST /createProduct', () => {
        
-        it('It should return status 400 since product validation has error.', async () => {
+        it('It should return status 400 since product Name has error.', async () => {
             const res = await request(server)
                 .post(`/product/createProduct`)
                 //token here .set('token',token)
                 .send({
                     userId:"5fc006f71ebba134c80c9e89",
-                    productName: "jeans",
+                    productName: 11111,
                     productCategory: "Cloth",
                     productSubCategory: "Trouser",
                     description: "It Is Brand New Jeans",
-                    minOrder: "minimum order",
-                    price: "product price",
+                    minOrder: 111,
+                    price:111,
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: ["Image.jpg"],
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 400 since product category has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: 1111,
+                    productSubCategory: "Trouser",
+                    description: "It Is Brand New Jeans",
+                    minOrder: 111,
+                    price:111,
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: ["Image.jpg"],
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+
+        it('It should return status 400 since product sub-category has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: "jeans",
+                    productSubCategory: 11111,
+                    description: "It Is Brand New Jeans",
+                    minOrder: 111,
+                    price:111,
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: ["Image.jpg"],
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 400 since min order has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: "trouser",
+                    productSubCategory: "jeans",
+                    description: "It Is Brand New Jeans",
+                    minOrder: 1,
+                    price:111,
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: ["Image.jpg"],
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 400 since price has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: "trouser",
+                    productSubCategory: "jeans",
+                    description: "It Is Brand New Jeans",
+                    minOrder: 1111,
+                    price:"111",
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: ["Image.jpg"],
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 400 since keyword has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: "trouser",
+                    productSubCategory: "jeans",
+                    description: "It Is Brand New Jeans",
+                    minOrder: 1111,
+                    price:1111,
                     keyword: "keyword",
                     measurement: "Piece",
-                    images: "Image.jpg",
-                    additionalProductInfo: "color:white"
+                    images: ["Image.jpg"],
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 400 since Image has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: "trouser",
+                    productSubCategory: "jeans",
+                    description: "It Is Brand New Jeans",
+                    minOrder: 1111,
+                    price:1111,
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: null,
+                    additionalProductInfo: ["white"]
+
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 400 since Additional Info has error.', async () => {
+            const res = await request(server)
+                .post(`/product/createProduct`)
+                //token here .set('token',token)
+                .send({
+                    userId:"5fc006f71ebba134c80c9e89",
+                    productName: "cloth",
+                    productCategory: "trouser",
+                    productSubCategory: "jeans",
+                    description: "It Is Brand New Jeans",
+                    minOrder: 1111,
+                    price:1111,
+                    keyword: ["keyword"],
+                    measurement: "Piece",
+                    images: ["Image.jpg"],
+                    additionalProductInfo: "white"
 
                 })
 
@@ -67,7 +229,7 @@ describe(' Product ', () => {
                     productCategory: "Cloth",
                     productSubCategory: "Trouser",
                     description: "It Is Brand New Jeans",
-                    minOrder: 10,
+                    minOrder: 1000,
                     price: 100,
                     keyword: ["keyword"],
                     measurement: "Piece",
@@ -82,7 +244,7 @@ describe(' Product ', () => {
 
     describe('POST /updateProduct/:id', () => {
 
-        it('It should return status 404 since product Id is invalid', async () => {
+        it('It should return status 400 since product Id is invalid', async () => {
             const res = await request(server)
                 .post(`/product/updateProduct/`+"111")
                 //token here .set('token',token)
@@ -99,7 +261,7 @@ describe(' Product ', () => {
 
                 })
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
 
         })
 
@@ -113,7 +275,7 @@ describe(' Product ', () => {
                     productCategory: "Cloth",
                     productSubCategory: "Trouser",
                     description: "It Is Brand New Jeans",
-                    minOrder: 10,
+                    minOrder: 100,
                     price: 100,
                     keyword: ["keyword"],
                     measurement: "Piece",
@@ -164,7 +326,7 @@ describe(' Product ', () => {
 
         })
 
-        it('It should return status 200 and update product', async () => {
+        /*it('It should return status 200 and update product', async () => {
 
             const product = Product({
                 userId:"5fc006f71ebba134c80c9e89",
@@ -200,7 +362,7 @@ describe(' Product ', () => {
 
             expect(res.status).toBe(200);
 
-        })
+        })*/
 
     });
 
@@ -224,10 +386,10 @@ describe(' Product ', () => {
 
     describe('GET /getProduct/:id', () => {
 
-        it('should return 404 if Id is not valid', async () => {
+        it('should return 400 if Id is not valid', async () => {
             const res = await request(server).get(`/product/getProduct/11`);
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         })
 
         it('should return 404 if product not found', async () => {
@@ -267,10 +429,10 @@ describe(' Product ', () => {
 
     describe('GET /getProductSeller/:userId', () => {
 
-        it('should return 404 if userId is not valid', async () => {
+        it('should return 400 if userId is not valid', async () => {
             const res = await request(server).get(`/product/getProductSeller/11`);
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         })
 
         it('should return 200 if userId is valid', async () => {
@@ -322,10 +484,10 @@ describe(' Product ', () => {
     describe('DELETE /deleteProduct/:id', () => {
         //token heree .set('token',token)
         
-        it('should return 404 if id is not valid (to delete)', async () => {
+        it('should return 400 if id is not valid (to delete)', async () => {
             const res = await request(server).delete(`/product/deleteProduct/11`);
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         })
 
         it('should return 404 if product to be deleted is not found', async () => {
@@ -334,7 +496,7 @@ describe(' Product ', () => {
             expect(res.status).toBe(404);
         })
 
-        it('should return 200 and delete the product', async () => {
+        /*it('should return 200 and delete the product', async () => {
 
             const product = Product({
                 userId:"5fc006f71ebba134c80c9e89",
@@ -354,26 +516,48 @@ describe(' Product ', () => {
             const productId = product._id;
             const res = await request(server).delete(`/product/deleteProduct/`+productId);
             expect(res.status).toBe(200);
-        })
+        })*/
     })
 
     describe('POST /filter/:offset/:limit', () => {
 
-        it('should return 404 if validation for filter failed', async () => {
+        it('should return 400 if validation for filter failed', async () => {
             const res = await request(server).post(`/product/filter/0/10`);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         })
 
-        it('should return 404 if validation for filter failed', async () => {
+        it('should return 400 if validation for filter failed', async () => {
+            const res = await request(server)
+            .post(`/product/filter/0/10`)
+            .send({
+
+                productSubCategory:"jeans",
+                maxPrice:111,
+            });
+            expect(res.status).toBe(400);
+        })
+
+        it('should return 400 if validation for filter failed', async () => {
+            const res = await request(server)
+            .post(`/product/filter/0/10`)
+            .send({
+                productCategory:"clothes",
+                maxPrice:1111,
+            });
+            expect(res.status).toBe(400);
+        })
+
+        it('should return 400 if validation for filter failed', async () => {
             const res = await request(server)
             .post(`/product/filter/0/10`)
             .send({
                 productCategory:"clothes",
                 productSubCategory:"jeans",
-                maxPrice:"clothes",
             });
-            expect(res.status).toBe(404);
+            
+            expect(res.status).toBe(400);
         })
+        
 
         it('should return 200 and filter products', async () => {
             const res = await request(server)

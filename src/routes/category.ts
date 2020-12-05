@@ -45,10 +45,13 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
 
   } else {
 
-    if (req.body.categoryName == null || req.body.categoryName == "") {
+  
+
+    if (req.body.categoryName == null || req.body.categoryName == "" || req.body.image == null || 
+    (req.body.subCategories != null && !(Array.isArray(req.body.subCategories)))) {
       res.status(400).json({
         sucess: false,
-        message: "Ensure all fields are provided"
+        message: "required fields are not filled or validation error"
       });
     } else {
       
@@ -67,7 +70,7 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
 router.post("/editCategory/:id",upload.single('image'),auth, async function (req, res) {
 
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).send('Invalid Id.');
+    return res.status(400).send('Invalid Id');
   }
 
   //const tok = req.token.userId;
@@ -175,7 +178,9 @@ router.delete("/deleteCategory/:id",auth, async function (req, res) {
         res.status(404).json({ sucess: true, message: "category not found" });
 
       }else {
-        fs.unlinkSync("../b2b/bTob/src/assets/images/categoryImages/"+category.image);
+        if(fs.existsSync("../b2b/bTob/src/assets/images/categoryImages/"+category.image)){
+          fs.unlinkSync("../b2b/bTob/src/assets/images/categoryImages/"+category.image);
+        }
        await Category.deleteOne({ _id: req.params.id }, async function (err, ret) {
           if (err) {
             res.status(500).json({ sucess: false, message: err });

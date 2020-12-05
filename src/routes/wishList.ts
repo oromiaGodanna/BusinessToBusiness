@@ -154,7 +154,8 @@ router.get("/getWishList",auth, async function (req, res) {
       if (err) {
         throw err;
       } else if (wishListD == null) {
-        res.status(200).send("you have not added product to wishlist");
+        wishListD = [];
+        res.status(200).send(wishListD);
       } else {
         //res.send(prod);
         if (wishListD.productIds.length == 0) {
