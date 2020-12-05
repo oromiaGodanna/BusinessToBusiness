@@ -7,7 +7,7 @@ const server = require('../../src/server');
 //let server;
 let user;
 let token;
-describe(' Special Offer ', () => {
+describe(' Proforma ', () => {
 
     beforeAll(async (done) => {
 
@@ -39,6 +39,24 @@ describe(' Special Offer ', () => {
                 //token here .set('token',token)
                 .send({
                     description: "jeans",
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+        
+
+        it('It should return status 400 if validation has error(to add proforma).', async () => {
+            const res = await request(server)
+                .post(`/proforma/createProforma`)
+                //token here .set('token',token)
+                .send({
+                    items:[{
+                        category: 1111,
+                        subCategory: "jeans",
+                        description: "jeans",
+                        quantity:10,
+                       } ]
                 })
 
             expect(res.status).toBe(400);
@@ -262,6 +280,29 @@ describe(' Special Offer ', () => {
 
         })
 
+        it('It should return status 400 if validation has error is(to send response to proforma)', async () => {
+            const res = await request(server)
+                .post(`/proforma/sendResponse`)
+                .send({
+                      itemId:"5fc006f71ebba134c80c9e89",
+                      unitPrice:"unit"  
+                });
+
+            expect(res.status).toBe(400);
+
+        })
+        it('It should return status 400 if validation has error is(to send response to proforma)', async () => {
+            const res = await request(server)
+                .post(`/proforma/sendResponse`)
+                .send({
+                      itemId:"5fc006f71ebba134c80c9e89",
+                     
+                });
+
+            expect(res.status).toBe(400);
+
+        })
+
         it('It should return status 404 if item in proforma not found (to send response to proforma)', async () => {
             const res = await request(server)
                 .post(`/proforma/sendResponse`)
@@ -313,10 +354,18 @@ describe(' Special Offer ', () => {
     describe('GET /getResponses/:itemId', () => {
 
         it('It should return status 400 if itemId is not valid(to get responses)', async () => {
-            const res = await request(server).get(`/proforma/getResponses/111`);
+            const res = await request(server).get(`/proforma/getResponses/1`);
                
 
             expect(res.status).toBe(400);
+
+        })
+
+        it('It should return status 404 if itemId is not found(to get responses)', async () => {
+            const res = await request(server).get(`/proforma/getResponses/5fc006f71ebba134c80c9e89`);
+               
+
+            expect(res.status).toBe(404);
 
         })
      
@@ -326,21 +375,27 @@ describe(' Special Offer ', () => {
             const proforma = Proforma({
                 userId:"5fc006f71ebba134c80c9e89",
                 items:[{
+                    _id:"5fc006f71ebba134c80c9e89",
                     proformaId:"5fc006f71ebba134c80c9e89",
                     category:"clothes",
                     subCategory: "jeans",
                     description: "jeans",
                     quantity:10,
+            
                 } ],
-                status:true
-
+                status:true,
+                response:[{
+                    itemId:"5fc006f71ebba134c80c9e89",
+                    unitPrice:200,
+                    respondBy:"eyerus zewdu",
+                    userId:"5fc006f71ebba134c80c9e89",
+                }]
                 })
                 await proforma.save();
-                const proformaId = proforma._id;
+                const proformaId = "5fc006f71ebba134c80c9e89";
                 const itemId = proforma.items[0]._id;
 
-
-            const res = await request(server).get(`/proforma/getResponses/`+itemId);
+            const res = await request(server).get(`/proforma/getResponses/5fc006f71ebba134c80c9e89`);
             
 
             expect(res.status).toBe(200);

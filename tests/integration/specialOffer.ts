@@ -373,14 +373,7 @@ describe(' Special Offer ', () => {
         })
     })  
 
-    describe('GET /getMyActiveSpecialOffer', () => {
-
-        it('should return status 200 and return active special offer added by user', async () => {
-            const res = await request(server).get(`/specialOffer/getMyActiveSpecialOffer`);
-
-            expect(res.status).toBe(200);
-        })
-    })  
+   
 
     describe('GET /getAllActiveSpecialOffer', () => {
 

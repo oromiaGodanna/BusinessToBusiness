@@ -47,6 +47,38 @@ describe(' Cart ', () => {
                 })
 
             expect(res.status).toBe(400);
+            expect(res.body).toHaveProperty('message', "required fields are not filled or validation error");
+
+        })
+
+        it('It should return status 400 if validation has error(to add category).', async () => {
+            const res = await request(server)
+                .post(`/category/addCategory`)
+                //token here .set('token',token)
+                .send({
+                    categoryName: "clothes",
+                    subCategories: [null],
+
+                })
+
+            expect(res.status).toBe(400);
+            expect(res.body).toHaveProperty('message', "required fields are not filled or validation error");
+
+        })
+
+        it('It should return status 400 if validation has error(to add category).', async () => {
+            const res = await request(server)
+                .post(`/category/addCategory`)
+                //token here .set('token',token)
+                .send({
+                    categoryName: "clothes",
+                    subCategories: "subcategory",
+                    image: "Image.jpg"
+
+                })
+
+            expect(res.status).toBe(400);
+            expect(res.body).toHaveProperty('message', "required fields are not filled or validation error");
 
         })
 
@@ -56,7 +88,7 @@ describe(' Cart ', () => {
                 //token here .set('token',token)
                 .send({
                     categoryName: "clothes",
-                    subCategories: [],
+                    subCategories: [null],
                     image: "Image.jpg"
 
                 })

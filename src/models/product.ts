@@ -35,7 +35,7 @@ function validateProducts(product) {
         productCategory:Joi.string().required(),
         productSubCategory: Joi.string().allow(null, ''),
         description: Joi.string().allow(null, ''),
-        minOrder: Joi.number().min(1).optional(),
+        minOrder: Joi.number().min(50).optional(),
         price: Joi.number().required().min(1),
         keyword:Joi.array().items(Joi.string().allow(null, '')),
         images:Joi.array().items(Joi.string()),

@@ -94,18 +94,12 @@ router.post("/editMeasurement/:id",auth, async function (req, res) {
 });
 
 router.get("/getMeasurements",auth, async function (req, res) {
-    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-      res.status(401).json({
-          sucess: false,
-          message: "You must to login to get Measurement and you must be admin"
-        });
     
-      } else {
         await Measurement.find({}, async function (err, measurements) {
             if (err) throw err;
             res.status(200).send(measurements);
         }).sort('-createDate');
-      }
+      
 });
 
 router.get("/getMeasurement/:id",auth, async function (req, res) {

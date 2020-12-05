@@ -49,6 +49,18 @@ describe(' Wishlist ', () => {
 
         })
 
+        it('It should return status 400 since product is not valid.', async () => {
+            const res = await request(server)
+                .post(`/wishlist/addToWishList`)
+                //token here .set('token',token)
+                .send({
+                  
+                })
+
+            expect(res.status).toBe(400);
+
+        })
+
         it('It should return status 404 since product is not found.', async () => {
             const res = await request(server)
                 .post(`/wishlist/addToWishList`)

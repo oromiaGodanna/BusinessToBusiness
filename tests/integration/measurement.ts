@@ -44,6 +44,7 @@ describe(' Measurement ', () => {
                 })
 
             expect(res.status).toBe(400);
+            expect(res.body).toHaveProperty('message', "Ensure all fields are provided");
 
         })
 

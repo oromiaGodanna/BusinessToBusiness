@@ -51,7 +51,7 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
             else if ((productInfo == null || (productInfo.userId.localeCompare(tokId) != 0))) {
                 res.status(404).json({
                     sucess: false,
-                    message: "Sorry,The product you wish to add special offer to, is not found"
+                    message: "Product not found"
                 });
             } else {
                 //specialOffer.specialOfferId = "1";
@@ -341,10 +341,10 @@ router.get("/getPendingSpecialOffer",auth, async function (req, res) {
                    var products= {product,specialoffer};
                    foundProducts.push(products);
                } catch(e) {
-                   console.log(`did not find ${specialoffer} in database`);
+                   //console.log(`did not find ${specialoffer} in database`);
                }
            }
-           console.log(foundProducts);
+           //console.log(foundProducts);
            var foundProductsArray = foundProducts;
            foundProducts=[];
            res.status(200).send(foundProductsArray);
@@ -370,7 +370,7 @@ router.get("/getMyActiveSpecialOffer",auth, async function (req, res) {
                    var products= {product,specialoffer};
                    foundProducts.push(products);
            }
-           console.log(foundProducts);
+           //console.log(foundProducts);
            var foundProductsArray = foundProducts;
            foundProducts=[];
            res.status(200).send(foundProductsArray);
@@ -393,7 +393,7 @@ router.get("/getAllActiveSpecialOffer", async function (req, res) {
                 var products= {product,specialoffer};
                 foundProducts.push(products);
            }
-           console.log(foundProducts);
+           //console.log(foundProducts);
            //return foundRiders;
            var foundProductsArray = foundProducts;
            foundProducts=[];
@@ -416,7 +416,7 @@ router.get("/getActiveSpecialOffer/:offset/:limit", async function (req, res) {
             var products= {product,specialoffer};
             foundProducts.push(products);
        }
-       console.log(foundProducts);
+       //console.log(foundProducts);
        //return foundRiders;
        var foundProductsArray = foundProducts;
        foundProducts=[];
@@ -433,7 +433,7 @@ router.get("/getAllActiveSpecialOfferByCategory/:productCategory", async functio
         if (err) throw err;
         for (let i = 0;i < productsArray.length;i++) {
                 var productSpecialOfferId = productsArray[i]._id;
-                console.log(productSpecialOfferId);
+                //console.log(productSpecialOfferId);
                 let specialoffer = await SpecialOffer.findOne({productId:productSpecialOfferId,status:true}).exec();
                 //let specialoffer = specialoffers[0];
                 var product=productsArray[i];
@@ -443,7 +443,7 @@ router.get("/getAllActiveSpecialOfferByCategory/:productCategory", async functio
                 };
                
         }
-        console.log(foundProducts);
+        //console.log(foundProducts);
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
@@ -480,7 +480,7 @@ router.get("/getActiveSpecialOfferByCategory/:productCategory/:offset/:limit", a
         if (err) throw err;
         for (let i = 0;i < productsArray.length;i++) {
                 var productSpecialOfferId = productsArray[i]._id;
-                console.log(productSpecialOfferId);
+                //console.log(productSpecialOfferId);
                 let specialoffer = await SpecialOffer.findOne({productId:productSpecialOfferId,status:true}).exec();
                 //let specialoffer = specialoffers[0];
                 var product=productsArray[i];
@@ -490,7 +490,7 @@ router.get("/getActiveSpecialOfferByCategory/:productCategory/:offset/:limit", a
                 };
                
         }
-        console.log(foundProducts);
+        //console.log(foundProducts);
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
@@ -507,7 +507,7 @@ router.get("/getAllActiveSpecialOfferBySubCategory/:productSubCategory", async f
         if (err) throw err;
         for (let i = 0;i < productsArray.length;i++) {
                 var productSpecialOfferId = productsArray[i]._id;
-                console.log(productSpecialOfferId);
+                //console.log(productSpecialOfferId);
                 let specialoffer = await SpecialOffer.findOne({productId:productSpecialOfferId,status:true}).exec();
                 //let specialoffer = specialoffers[0];
                 var product=productsArray[i];
@@ -517,7 +517,7 @@ router.get("/getAllActiveSpecialOfferBySubCategory/:productSubCategory", async f
                 };
                
         }
-        console.log(foundProducts);
+        //console.log(foundProducts);
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
@@ -555,7 +555,7 @@ router.get("/getActiveSpecialOfferBySubCategory/:productSubCategory/:offset/:lim
         if (err) throw err;
         for (let i = 0;i < productsArray.length;i++) {
                 var productSpecialOfferId = productsArray[i]._id;
-                console.log(productSpecialOfferId);
+                //console.log(productSpecialOfferId);
                 let specialoffer = await SpecialOffer.findOne({productId:productSpecialOfferId,status:true}).exec();
                 //let specialoffer = specialoffers[0];
                 var product=productsArray[i];
@@ -565,7 +565,7 @@ router.get("/getActiveSpecialOfferBySubCategory/:productSubCategory/:offset/:lim
                 };
                
         }
-        console.log(foundProducts);
+        //console.log(foundProducts);
         //return foundRiders;
         var foundProductsArray = foundProducts;
         foundProducts=[];
@@ -590,10 +590,10 @@ router.get("/getProductInSpecialOffer/:productId", async function (req, res) {
                    var products= {product,specialOffer};
                    foundProducts.push(products);
                } catch(e) {
-                   console.log(`did not find ${specialOffer} in database`);
+                   //console.log(`did not find ${specialOffer} in database`);
                }
          
-           console.log(foundProducts);
+           //console.log(foundProducts);
            var foundProductsArray = foundProducts;
            foundProducts=[];
            res.status(200).send(foundProductsArray);

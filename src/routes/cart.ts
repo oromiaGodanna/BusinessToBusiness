@@ -146,6 +146,7 @@ router.get("/getCart",auth, async function (req, res) {
             if (err) {
                 throw err;
             } else if (cart == null) {
+                cart=[];
                 res.status(200).send(cart);
             } else {
                 if (cart.cartEntries.length == 0) {

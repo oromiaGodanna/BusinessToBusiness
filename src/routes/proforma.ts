@@ -51,6 +51,11 @@ router.post("/createProforma",auth, async function (req, res) {
                 }else {
                   for (var i = 0; i < itemsObj.length; i++) {
                     var item = Item();
+                    const { errorItem } = validateItem(req.body);
+                    if(errorItem){
+                      res.status(400).json({ sucess: true, message: error.details[0].message });
+                    };
+
                     item.proformaId = proformaCreated._id;
                     item.category = itemsObj[i].category;
                     item.subCategory = itemsObj[i].subCategory;
@@ -628,7 +633,7 @@ router.get("/getResponses/:itemId",auth, async function (req, res) {
         throw err;
       } else if (proformaD == null) {
 
-        res.status(200).send("proforma with the item not found.");
+        res.status(404).send("proforma with the item not found.");
       } else {
 
         res.status(200).send({
