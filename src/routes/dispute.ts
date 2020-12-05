@@ -19,7 +19,6 @@ router.post('/openDispute', async (req, res) => {
         disputeSettlement: req.body.disputeSettlement
         
     });
-    console.log(req.body.disputeSettlement)
     try {
         dispute = await dispute.save();
         res.send(dispute);
@@ -29,6 +28,31 @@ router.post('/openDispute', async (req, res) => {
     
 
 });
+
+router.get('/getDispute/:id', async (req, res) => {
+   
+    const dispute = await Dispute.findById(req.params.id);
+    if (!dispute) return res.status(404).send('No Dispute for the given user.');
+
+    res.send(dispute);
+
+
+});
+//get disputes using buyer ID
+router.get('/getDisputes/', async (req, res) =>{
+    // get dispute for the given order ids
+    const disputes = await Dispute.find({
+        'orderId': { $in : req.body.orderIds}
+    }, function(err, docs){ 
+        if(err)
+        console.log(err);
+        
+    });
+
+    if (!disputes) return res.status(404).send('No Order for the given product.');
+
+    res.send({disputes});
+})
 
 router.put('/cancelDispute/:id', async (req, res) => {
     //find order for the given id and update status

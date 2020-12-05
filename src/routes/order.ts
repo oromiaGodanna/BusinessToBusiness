@@ -37,20 +37,41 @@ router.get('/getOrder/:id', async (req, res) => {
 
 
 });
-
-router.get('/getOrders', async (req, res) =>{
+//get orders using buyer ID
+router.get('/getBuyerOrders/:id', async (req, res) =>{
     // get orders for the given order ids
-    const orders = await Order.find({
-        '_id': { $in : req.body.orderIds}
-    }, function(err, docs){ 
-        if(err)
-        console.log(err);
+    // const orders = await Order.find({
+    //     '_id': { $in : req.body.orderIds}
+    // }, function(err, docs){ 
+    //     if(err)
+    //     console.log(err);
         
-    });
+    // });
+    const orders = await Order.find({buyerId: req.params.id})
+
     if (!orders) return res.status(404).send('No Order for the given product.');
 
     res.send({orders});
 })
+
+//get orders using supplier ID
+router.get('/getSupplierOrders/:id', async (req, res) =>{
+    // get orders for the given order ids
+    // const orders = await Order.find({
+    //     '_id': { $in : req.body.orderIds}
+    // }, function(err, docs){ 
+    //     if(err)
+    //     console.log(err);
+        
+    // });
+    const orders = await Order.find({sellerId: req.params.id})
+
+    if (!orders) return res.status(404).send('No Order for the given product.');
+
+    res.send({orders});
+});
+
+//accept order for suppliers
 router.put('/acceptOrder/:id', async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 

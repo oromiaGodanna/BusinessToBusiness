@@ -54,4 +54,17 @@ router.get('/getRating/:id', async (req, res) => {
 
 
 });
+
+//get a single rating for a given order
+router.get('/getOneRating/:id', async (req, res) => {
+    //find ratings for a specific order
+    const rating = await Rating.find({orderId: req.params.id})
+    if (!rating) return res.status(404).send('No rating for the given order.');
+
+
+
+    res.send({rating});
+
+
+});
 module.exports = router;

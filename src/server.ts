@@ -4,7 +4,7 @@ const app = express();
 const mongoose = require('mongoose');
 const Joi = require('joi');
 Joi.objectId = require('joi-objectid')(Joi);
-const stripe = require("stripe")("sk_test_51HJ1IYKh0KNnlGFstXGy55rb5I25EORqC3dvHEoNsocIowXF8RVPnEzbodvuzCYpgTw5JxCFp13ZkfEchtC5DHP20054VxgU6y");
+// const stripe = require("stripe")("sk_test_51HJ1IYKh0KNnlGFstXGy55rb5I25EORqC3dvHEoNsocIowXF8RVPnEzbodvuzCYpgTw5JxCFp13ZkfEchtC5DHP20054VxgU6y");
 const cors = require('cors');
 
 
@@ -32,14 +32,14 @@ app.use(cors(corsOptions));
 app.use('/order', order);
 app.use('/payment', payment);
 
-(async ()=>{
-const paymentIntent = await stripe.paymentIntents.create({
-  amount: 1099,
-  currency: 'usd',
-  // Verify your integration in this guide by including this parameter
-  metadata: {integration_check: 'accept_a_payment'},
-});
-})();
+// (async ()=>{
+// const paymentIntent = await stripe.paymentIntents.create({
+//   amount: 1099,
+//   currency: 'usd',
+//   // Verify your integration in this guide by including this parameter
+//   metadata: {integration_check: 'accept_a_payment'},
+// });
+// })();
 app.use('/rating', rating);
 app.use('/review', review);
 app.use('/dispute', dispute);
