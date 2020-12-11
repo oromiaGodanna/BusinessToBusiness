@@ -1,4 +1,6 @@
 export {};
+const auth = require('../middleware/auth');
+
 const {Rating, validateRating} = require('../models/rating');
 const express = require('express');
 const router = express.Router();
@@ -10,7 +12,7 @@ function getOrderByID(){
 }
 
 
-router.post('/addRating', async (req, res) => {
+router.post('/addRating', auth, async (req, res) => {
 
     //validate the request 
     console.log(req.body)
@@ -37,7 +39,7 @@ router.post('/addRating', async (req, res) => {
 
 
 
-router.get('/getRating/:id', async (req, res) => {
+router.get('/getRating/:id',auth,  async (req, res) => {
     //find ratings for a specific product
     const allRatings = await Rating.find({productId: req.params.id})
     if (!allRatings) return res.status(404).send('No rating for the given product.');
@@ -56,7 +58,7 @@ router.get('/getRating/:id', async (req, res) => {
 });
 
 //get a single rating for a given order
-router.get('/getOneRating/:id', async (req, res) => {
+router.get('/getOneRating/:id', auth, async (req, res) => {
     //find ratings for a specific order
     const rating = await Rating.find({orderId: req.params.id})
     if (!rating) return res.status(404).send('No rating for the given order.');

@@ -1,9 +1,10 @@
 export {};
 const {Dispute, validateDispute, validateSettlement} = require('../models/dispute');
+const auth = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 
-router.post('/openDispute', async (req, res) => {
+router.post('/openDispute', auth, async (req, res) => {
 
     //validate the request 
     const { error } = validateDispute(req.body); 
@@ -29,7 +30,7 @@ router.post('/openDispute', async (req, res) => {
 
 });
 
-router.get('/getDispute/:id', async (req, res) => {
+router.get('/getDispute/:id', auth, async (req, res) => {
    
     const dispute = await Dispute.findById(req.params.id);
     if (!dispute) return res.status(404).send('No Dispute for the given user.');
@@ -39,7 +40,7 @@ router.get('/getDispute/:id', async (req, res) => {
 
 });
 //get disputes using buyer ID
-router.get('/getDisputes/', async (req, res) =>{
+router.get('/getDisputes/', auth, async (req, res) =>{
     // get dispute for the given order ids
     const disputes = await Dispute.find({
         'orderId': { $in : req.body.orderIds}
@@ -54,7 +55,7 @@ router.get('/getDisputes/', async (req, res) =>{
     res.send({disputes});
 })
 
-router.put('/cancelDispute/:id', async (req, res) => {
+router.put('/cancelDispute/:id', auth, async (req, res) => {
     //find order for the given id and update status
     const dispute = await Dispute.findByIdAndUpdate(req.params.id, 
         {disputeStatus: "canceled"}, 
@@ -68,7 +69,7 @@ router.put('/cancelDispute/:id', async (req, res) => {
     res.send(dispute);
 });
 
-router.put('/closeDispute/:id', async (req, res) => {
+router.put('/closeDispute/:id', auth, async (req, res) => {
     //validate the settlement object
     const {error} = validateSettlement(req.body)
     if (error) return res.status(400).send(error.details[0].message);

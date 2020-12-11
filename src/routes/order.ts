@@ -1,11 +1,11 @@
 import { json } from "express";
-
+const auth = require('../middleware/auth');
 export {};
 const {Order, validateOrder} = require('../models/order');
 const express = require('express');
 const router = express.Router();
 
-router.post('/createOrder', async (req, res) => {
+router.post('/createOrder', auth, async (req, res) => {
 
     //validate the request 
     const { error } = validateOrder(req.body); 
@@ -28,7 +28,7 @@ router.post('/createOrder', async (req, res) => {
 
 
 
-router.get('/getOrder/:id', async (req, res) => {
+router.get('/getOrder/:id', auth,  async (req, res) => {
     //find order for the given id
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).send('No Order for the given product.');
@@ -38,7 +38,7 @@ router.get('/getOrder/:id', async (req, res) => {
 
 });
 //get orders using buyer ID
-router.get('/getBuyerOrders/:id', async (req, res) =>{
+router.get('/getBuyerOrders/:id', auth,  async (req, res) =>{
     // get orders for the given order ids
     // const orders = await Order.find({
     //     '_id': { $in : req.body.orderIds}
@@ -55,7 +55,7 @@ router.get('/getBuyerOrders/:id', async (req, res) =>{
 })
 
 //get orders using supplier ID
-router.get('/getSupplierOrders/:id', async (req, res) =>{
+router.get('/getSupplierOrders/:id', auth, async (req, res) =>{
     // get orders for the given order ids
     // const orders = await Order.find({
     //     '_id': { $in : req.body.orderIds}
@@ -72,7 +72,7 @@ router.get('/getSupplierOrders/:id', async (req, res) =>{
 });
 
 //accept order for suppliers
-router.put('/acceptOrder/:id', async (req, res) =>{
+router.put('/acceptOrder/:id', auth,  async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Waiting for initial payment"}, 
@@ -85,7 +85,7 @@ router.put('/acceptOrder/:id', async (req, res) =>{
 
     res.send(order);
 })
-router.put('/declineOrder/:id', async (req, res) =>{
+router.put('/declineOrder/:id', auth, async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Order Declined"}, 
@@ -98,7 +98,7 @@ router.put('/declineOrder/:id', async (req, res) =>{
 
     res.send(order);
 })
-router.put('/cancelOrder/:id', async (req, res) =>{
+router.put('/cancelOrder/:id', auth, async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Order canceled"}, 
@@ -111,7 +111,7 @@ router.put('/cancelOrder/:id', async (req, res) =>{
 
     res.send(order);
 });
-router.put('/changePaymentStatus/:id', async (req, res) =>{
+router.put('/changePaymentStatus/:id', auth, async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Waiting for final payment"}, 
@@ -124,7 +124,7 @@ router.put('/changePaymentStatus/:id', async (req, res) =>{
 
     res.send(order);
 })
-router.put('/changeShipmentStatus/:id', async (req, res) =>{
+router.put('/changeShipmentStatus/:id', auth, async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Waiting for shipment"}, 
@@ -137,7 +137,7 @@ router.put('/changeShipmentStatus/:id', async (req, res) =>{
 
     res.send(order);
 })
-router.put('/changeDeliveryStatus/:id', async (req, res) =>{
+router.put('/changeDeliveryStatus/:id', auth, async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Waiting for delivery confirmation"}, 
@@ -150,7 +150,7 @@ router.put('/changeDeliveryStatus/:id', async (req, res) =>{
 
     res.send(order);
 })
-router.put('/orderDelivered/:id', async (req, res) =>{
+router.put('/orderDelivered/:id', auth, async (req, res) =>{
     //find order for the given id and update status
     const order = await Order.findByIdAndUpdate(req.params.id, 
         {status: "Delivered"}, 
@@ -164,7 +164,7 @@ router.put('/orderDelivered/:id', async (req, res) =>{
     res.send(order);
 })
 
-router.put('/closeOrderReceipt/:id', async (req, res) =>{
+router.put('/closeOrderReceipt/:id', auth, async (req, res) =>{
     //first check if dispute is not opened using this order ID
     
     //find order for the given id and update status
