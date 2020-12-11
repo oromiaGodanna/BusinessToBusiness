@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Joi = require('joi');
 
-const userType = ["Buyer", "Seller", "Admin"];
+const userType = ["Buyer", "Seller", "Admin", "Both"];
 
 const taskSchema = new Schema({
     taskName: {
@@ -17,23 +17,31 @@ const taskSchema = new Schema({
     },
     preConditions: [String],
 });
+
 const FAQSchema = new Schema({
     question: String,
     answer: String
 });
-const catagorySchema = new Schema({
+
+const topicsSchema = new Schema({
     title: String,
     subTitle: String,
+    icon: String,
     tasks : [taskSchema],
-    FAQ: [FAQSchema],
+    FAQs: [FAQSchema],
     popular: Boolean,
-    
-    
-    
+});
 
-})
 const Task = mongoose.model('Task', taskSchema);
-module.exports = Task;
+const Topic = mongoose.model('Topic', topicsSchema);
+
+module.exports = {
+      Topic: Topic,
+       Task: Task
+};
+module.exports.validateTopics = function(topic){
+
+}
 
 module.exports.validateTask = function(task){
     const schema = {
@@ -43,4 +51,12 @@ module.exports.validateTask = function(task){
         description: Joi.string()
     }
     return Joi.validate(task, schema);
+}
+
+module.exports.validateFAQ = function(FAQ){
+    const schema = {
+        question : Joi.string().required(),
+        answer: Joi.string().required()
+    }
+    return Joi.validate(FAQ, schema);
 }

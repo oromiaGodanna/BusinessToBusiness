@@ -25,6 +25,7 @@
     "@sendgrid/mail": "^6.5.5",
     "bcrypt": "^5.0.0",
     "config": "^3.3.1",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
@@ -51,15 +52,17 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.7",
-    "@types/jest": "^25.1.5",
+    "@types/jest": "^25.2.3",
     "@types/mongoose": "^5.7.36",
-    "@types/node": "^13.7.6",
-    "jest": "^25.2.6",
+    "@types/node": "^13.13.34",
+    "install": "^0.13.0",
+    "jest": "^25.5.4",
     "nodemon": "^2.0.4",
     "supertest": "^4.0.2",
-    "ts-jest": "^25.3.0",
+    "ts-jest": "^25.5.1",
     "ts-node": "^8.6.2",
-    "typescript": "^3.8.2"
+    "typescript": "^3.9.7",
+    "typescriptnpm": "^1.0.1"
   },
   "nodemonConfig": {
     "ignore": [

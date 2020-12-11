@@ -117,15 +117,18 @@ const sellerSchema = extendSchema(customerSchema, {
         type: String, 
         default: null
     },
-    subscription: {         
-        id : {
-            type: ObjectId, 
-            ref: 'Subscription',
-            default: null
-        },
-        startDate: Date,
-        endDate: Date,
-        counter: Number  //used and unused
+    subscription: {     
+        type: ObjectId, 
+        ref: 'Subscription',
+        default: null 
+        // id : {
+        //     type: ObjectId, 
+        //     ref: 'Subscription',
+        //     default: null
+        // },
+        // startDate: Date,
+        // endDate: Date,
+        // counter: Number  //used and unused
     },
     products: [{
         type:ObjectId,
