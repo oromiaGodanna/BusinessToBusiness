@@ -17,16 +17,16 @@ const Order = mongoose.model('Order', new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
-    productIds: {
+    cartEntryId: {
         type: [ mongoose.Schema.Types.ObjectId ],
         required: true,
         ref: 'Product'
     },
-    amount: {
+    totalAmount: {
         type: Number,
         required: true,
     },
-    price: {
+    totalPrice: {
         type: Number,
         required: true,
     },
@@ -50,9 +50,9 @@ function validateOrder(order){
     const schema = Joi.object({
         buyerId: Joi.objectId().required(),
         sellerId: Joi.objectId().required(),
-        productIds: Joi.array().items(Joi.objectId()).min(1).required(),
-        amount: Joi.number().integer().min(1).required(),
-        price: Joi.number().positive().precision(2).strict().required(),
+        cartEntryId: Joi.objectId().required(),
+        totalAmount: Joi.number().integer().min(1).required(),
+        totalPrice: Joi.number().positive().required(),
         shippingAddress: Joi.object().allow(null).required(),
         status: Joi.string().valid(...orderStatus),
         paymentIds: Joi.array().items(Joi.objectId()).allow(null).required()
