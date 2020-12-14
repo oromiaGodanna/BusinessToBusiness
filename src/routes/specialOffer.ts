@@ -27,7 +27,8 @@ router.post("/createSpecialOffer",auth, async function (req, res) {
 
     const { error } = validateSpecialOffer(req.body);
 
-    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+   // if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.status(401).json({
             sucess: false,
             message: "You must login to add special offer to product"
@@ -91,7 +92,8 @@ router.post("/openSpecialOffer/:specialOfferId",auth, async function (req, res) 
     }
 
     var tokId = req.user._id;
-    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+        if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.status(401).json({
             sucess: false,
             message: "You must login to open special offer"
@@ -157,7 +159,8 @@ router.post("/closeSpecialOffer/:specialOfferId",auth, async function (req, res)
     }
 
      var tokId = req.user._id;
-    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.status(401).json({
             sucess: false,
             message: "You must login to close special offer"
@@ -218,7 +221,8 @@ router.delete("/deleteOffer/:productId",auth, async function (req, res) {
 
 
     var tokId = req.user._id;
-    if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.status(401).json({
             sucess: false,
             message: "You must login to delete the special offer"
@@ -231,7 +235,7 @@ router.delete("/deleteOffer/:productId",auth, async function (req, res) {
             }
             else if (productInfo == null || (productInfo.userId.localeCompare(tokId) != 0)) {
 
-                res.status(404).json("you cannot delete the special offer");
+                res.status(404).json("special offer not found");
 
             } else {
 
@@ -252,7 +256,7 @@ router.delete("/deleteOffer/:productId",auth, async function (req, res) {
                                             throw err;
                                         }
                                     });
-                                    res.status(200).json({ sucess: true, message: "special offer is deleted from the product" });
+                                    res.status(200).json({ sucess: true, message: "special offer is deleted" });
 
                             }
                         });
@@ -267,7 +271,8 @@ router.delete("/deleteOffer/:productId",auth, async function (req, res) {
 
 router.delete("/deleteProduct/:productId",auth, async function (req, res) {
     var tokId = req.user._id;
-   if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
         res.json({
             sucess: false,
             message: "You must login to delete the special offer"
@@ -325,8 +330,9 @@ router.delete("/deleteProduct/:productId",auth, async function (req, res) {
 
 router.get("/getPendingSpecialOffer",auth, async function (req, res) {
        var tokId = req.user._id;
-     if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-        res.status(401).json({
+     //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+         res.status(401).json({
             sucess: false,
             message: "you must log in"
         });
@@ -355,8 +361,9 @@ router.get("/getPendingSpecialOffer",auth, async function (req, res) {
 
 router.get("/getMyActiveSpecialOffer",auth, async function (req, res) {
   var tokId = req.user._id;
-  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-    res.status(401).json({
+ // if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+        res.status(401).json({
             sucess: false,
             message: "you must log in"
         });

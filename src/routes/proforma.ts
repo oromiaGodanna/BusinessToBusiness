@@ -33,7 +33,7 @@ router.post("/createProforma",auth, async function (req, res) {
     const { error } = validateProforma(req.body);
     if (error) {
       //return res.status(400).send(error.details[0].message);
-      res.status(400).json({ sucess: true, message: error.details[0].message });
+      res.status(400).json({ sucess: true, message: "validation error" });
     } else {
 
       await proforma.save(async function (err, proformaCreated) {
@@ -74,7 +74,7 @@ router.post("/createProforma",auth, async function (req, res) {
               })
 
           } else {
-            res.status(200).json({ sucess: true, message: "proforma added" + proformaCreated });
+            res.status(200).json({ sucess: true, message: "Pro forma created" });
           }
         }
       });
@@ -505,7 +505,7 @@ router.post("/sendResponse",auth, async function (req, res) {
   } else {
     const { error } = validateResponse(req.body);
     if (error) {
-      res.status(400).send(error.details[0].message);
+      res.status(400).send("validation error");
 
     } else {
     await Proforma.findOne({ "items._id": req.body.itemId }, async function (err, proforma) {
@@ -529,7 +529,7 @@ router.post("/sendResponse",auth, async function (req, res) {
             if (err) {
               res.status(500).json({ sucess: false, message: err });
             }
-            res.status(200).json({ sucess: true, message: "Response is Added" });
+            res.status(200).json({ sucess: true, message: "Response sent" });
           })
         }
         else {
@@ -541,7 +541,7 @@ router.post("/sendResponse",auth, async function (req, res) {
             if (err) {
               res.status(500).json({ sucess: false, message: err });
             }
-            res.status(200).json({ sucess: true, message: "Response is updated" });
+            res.status(200).json({ sucess: true, message: "Response sent" });
 
           })
 
@@ -633,13 +633,13 @@ router.get("/getResponses/:itemId",auth, async function (req, res) {
         throw err;
       } else if (proformaD == null) {
 
-        res.status(404).send("proforma with the item not found.");
+        res.status(404).send("proforma not found.");
       } else {
 
         res.status(200).send({
           response: proformaD.response,
           items: proformaD.items
-          
+         
           });
         //res.send(proformaD.response);
       }

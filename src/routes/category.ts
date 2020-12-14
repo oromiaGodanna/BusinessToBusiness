@@ -85,7 +85,7 @@ router.post("/editCategory/:id",upload.single('image'),auth, async function (req
     if (req.body.categoryName == null || req.body.categoryName == "" ) {
        res.status(400).json({
         sucess: false,
-        message: "Ensure all fields are provided"
+        message: "required fields are not filled or validation error"
       });
     } else {
       //console.log(tok);

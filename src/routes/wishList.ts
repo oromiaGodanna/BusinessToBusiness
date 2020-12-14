@@ -44,6 +44,9 @@ router.post("/addToWishList",auth, async function (req, res) {
 
     const { error } = validateWishListProduct(req.body);
    
+    if(error){
+      return res.status(400).send("Product id is required");
+    }
 
     await Product.findOne({ _id: req.body.productIds }, async function (err, productExist) {
       if (err) {
@@ -53,7 +56,7 @@ router.post("/addToWishList",auth, async function (req, res) {
         res.status(404).json({
           success: false,
           type:false,
-          message: "Sorry,The product you wish to add to wishlist doesnot exist"
+          message: "Product not found"
         });
       } else {
 
@@ -110,8 +113,8 @@ router.post("/addToWishList",auth, async function (req, res) {
                 if (err) {
                   res.status(400).json({ success: false,type:false, message: err });
                 } else {
-                  res.status(200).json({ success: true,type:true, message: "Wishlist found.product added to wishlist" });
-                  console.log("Wishlist found.product added to wishlist");
+                  res.status(200).json({ success: true,type:true, message: "product added to wish list" });
+                  //console.log("Wishlist found.product added to wishlist");
                 }
                 //res.redirect("/products");
               });
@@ -187,7 +190,7 @@ router.get("/getWishList",auth, async function (req, res) {
 router.delete("/removeFromWishList/:id",auth, async function (req, res) {
 
   if (!mongoose.Types.ObjectId.isValid(req.params.id) ) {
-    return res.status(400).json({ success: false,type:false,message: 'Invalid product Id.' });
+    return res.status(400).json({ success: false,type:false,message: 'Invalid Id.' });
     
   }
 

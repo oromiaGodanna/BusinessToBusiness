@@ -63,7 +63,8 @@ router.post("/createProduct", upload.array('images'),auth, async function (req, 
   //console.log(this.images);
   imageNames=[];
   
-  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {  
     res.status(401).json({
       sucess: false,
       message: "You must to login to add product and you must be seller"
@@ -72,7 +73,7 @@ router.post("/createProduct", upload.array('images'),auth, async function (req, 
   } else {
     const { error } = validateProduct(req.body);
     if (error) {
-       res.status(400).send(error.details[0].message);
+       res.status(400).json({ sucess: false, message: "Validation error" });
 
     } else {
 
@@ -80,7 +81,7 @@ router.post("/createProduct", upload.array('images'),auth, async function (req, 
         if (err) {
           res.status(500).send(err);
         } else {
-          res.status(200).send(productCreated);
+          res.status(200).json({ sucess: true, message: "Product added",data:productCreated});
         }
       });
 
@@ -96,8 +97,9 @@ router.post("/updateProduct/:id",auth, async function (req, res) {
     return res.status(400).send('Invalid Id.');
   }
 
-  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
-    res.status(401).json({
+  //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {  
+      res.status(401).json({
       sucess: false,
       message: "You must to login to update product and you must be seller"
     });
@@ -124,7 +126,7 @@ router.post("/updateProduct/:id",auth, async function (req, res) {
 
         } else if ((product.userId.localeCompare( tok )) != 0) {
           //console.log(tok);
-          res.status(404).send("you cannot update the product");
+          res.status(404).send("Invalid Id.");
 
         } else {
 
@@ -215,7 +217,8 @@ router.get("/getProductSeller/:userId",auth, async function (req, res) {
   }
 
   var tokUserId = req.user._id;
-  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
     res.status(401).json({
       sucess: false,
       message: "You must to login to get your products and you must be seller"
@@ -289,7 +292,8 @@ router.delete("/deleteProduct/:id",auth, async function (req, res) {
   }
 
   const tok =req.user._id;
-  if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+ // if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {   
     res.status(401).json({
       success: false,
       message: "You must to login to delete the product and you must be the product's seller"
@@ -305,7 +309,7 @@ router.delete("/deleteProduct/:id",auth, async function (req, res) {
 
       } else if ((product.userId.localeCompare( tok )) != 0) {
        
-        res.status(404).send("you cannot delete the product");
+        res.status(404).send("product not found");
 
       } else {
         await Product.updateOne({ _id: req.params.id }, {
@@ -364,13 +368,14 @@ router.post("/filter/:offset/:limit", async function (req, res) {
 router.get("/search/:searchWord/:offset/:limit", async function (req, res) {
   var offset = Number(req.params.offset);
   var limit = Number(req.params.limit);
+  var searchInput = String(req.params.searchWord);
   await Product.find(
     {
-      $or: [{ productName: req.params.searchWord },
-      { keyword: { $in: req.params.searchWord } },
-      { description: req.params.searchWord },
-      { productCategory: req.params.searchWord },
-      { productSubCategory: req.params.searchWord }]
+      $or: [{ productName: searchInput },
+      { keyword: { $in: searchInput } },
+      { description: searchInput },
+      { productCategory: searchInput },
+      { productSubCategory: searchInput }]
     }, async function (err, products) {
       //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
 
