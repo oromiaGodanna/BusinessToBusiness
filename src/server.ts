@@ -118,7 +118,7 @@ app.use('/auth', auth);
 
 // mercy's
 app.use('/customer', customer);
-app.use('/user', user);
+app.use('/admin', user);
 app.use('/subscription', subscription);
 app.use('/tasks', task);
 app.use('/report', report);

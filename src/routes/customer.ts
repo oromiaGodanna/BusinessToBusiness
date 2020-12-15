@@ -1,13 +1,14 @@
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
+import { mongo } from "mongoose";
 const express = require('express');
 const router = express.Router();
 const bcyrpt = require('bcrypt');
 
 const asyncMiddleware = require('../middleware/async');
-const {auth } = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const role = require('../middleware/role');
 const jwt = require('jsonwebtoken');
-const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');
+const { Customer, Buyer, Seller, Both, DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');
 const { validateLoginInfo, generateAuthToken, sendConfirmationEmail, sendPasswordResetToken, validatePassword, validateEmail } = require('../models/user');
 
 
@@ -45,7 +46,8 @@ router.post('/register', async (req, res) => {
     };
     try {
         const newCustomer = await customer.save();
-        await sendConfirmationEmail(user);
+        const reponse = await sendConfirmationEmail(user);
+        console.log('email response', response);
         res.json({
             status: 200,
             success: true,
@@ -66,36 +68,38 @@ router.post('/register', async (req, res) => {
 //email Verification
 router.get('/email_confirmation/:token', async (req, res) => {
     const token = req.params.token;
+    if (!token) return res.status(401).send('No Token Provided.');
+    const user = await jwt.verify(token, process.env.jwtPrivateKey);
+    if (!user) return res.status(400).send('Invalid token');
     try {
-        const user = await jwt.verify(token, process.env.jwtPrivateKey);
-        console.log('jwt', user);
-        if (!user) return res.status(400).send('Invalid token');
         const verfiedUser = await Customer.findOneAndUpdate({ email: user.email }, { verified: true }, { new: true });
-        console.log('user', user);
         res.json({
             status: 200,
             success: true,
-            msg: 'Email has been confirmed please process to the login page'
+            msg: 'Email has been confirmed please process to the login page',
+            user: user
         });
     } catch (err) {
         res.json({
             status: 400,
             success: false,
             msg: 'Email not confirmed.'
-        })
+        });
     }
 });
 
 router.post('/resend_confirmation', async (req, res) => {
-    let customer = await Customer.findOne({ email: req.body.email });
+    const email = req.body.email;
+    if (!email) return res.status(400).send('Email address is required');
+    let customer = await Customer.findOne({ email: email });
     if (!customer) return res.status(400).send('Customer with this email address can not be found');
     const user = {
         id: customer.id,
         firstName: customer.firstName,
-        email: req.body.email
+        email: email
     }
     try {
-        //await sendConfirmationEmail(user);
+        await sendConfirmationEmail(user);
         res.status(200).send("Confirmation email sent");
     } catch (error) {
         res.status(400).send(error.errmsg);
@@ -106,32 +110,46 @@ router.post('/resend_confirmation', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { error } = validateLoginInfo(req.body);
     if (error) return res.status(400).json(error.details[0].message);
+    try {
+        let customer = await Customer.findOne({ email: req.body.email });
+        if (!customer) return res.status(400).send('Invalid Email or password');
+        if (!customer.verified) return res.status(403).send('Unconfirmed Email Address. Please confirm Your email to Login');
 
-    let customer = await Customer.findOne({ email: req.body.email });
-    if (!customer) return res.status(400).send('Invalid Email or password');
-    if (!customer.verified) return res.status(403).send('Unconfirmed Email Address. Please confirm Your email to Login');
+        const validPassword = await bcyrpt.compare(req.body.password, customer.password);
+        if (!validPassword) return res.status(400).send('Invalid Email or password');
 
-    const validPassword = await bcyrpt.compare(req.body.password, customer.password);
-    if (!validPassword) return res.status(400).send('Invalid Email or password');
+        const token = generateAuthToken(customer);
+        res.header('token', token).json({
+            status: 200,
+            token: token,
+            id: customer.id,
+            user: customer,
+            msg: "Login Successfull"
+        });
+    } catch (error) {
+        res.json({
+            status: 400,
+            success: false,
+            msg: 'Login Falied.'
+        });
+    }
 
-    const token = generateAuthToken(customer);
-    res.header('token', token).json({
-        status: 200,
-        token: token,
-        id: customer.id,
-        user: customer,
-        msg: "Login Successfull"
-    });
 });
 
 //get logged in Customer
 router.get('/me', auth, async (req, res) => {
-    const customer = await Customer.findById(req.user._id).select('-password');
-    res.send(customer);
+    try {
+        const customer = await Customer.findById(req.user._id).select('-password');
+        if (!customer) return res.status(404).send('Customer with id can not be found');
+        res.status(200).send(customer);
+    } catch (error) {
+        res.status(400).send(error.errmsg);
+    }
+
 });
 
 //retrive all customers
-router.get('/',  async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const customers = await Customer
             .find()
@@ -140,7 +158,7 @@ router.get('/',  async (req, res) => {
         res.json({
             status: 200,
             success: true,
-            msg: 'All customers successfully retrives',
+            msg: 'All customers successfully retrived',
             ObjectsReturned: customers.length,
             customers: customers
         });
@@ -156,6 +174,7 @@ router.get('/',  async (req, res) => {
 
 //get customer by id
 router.get('/:id', async (req, res) => {
+    // if(!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).send('Invalid Id.');
     try {
         const customer = await Customer.findById(req.params.id).select('-password');
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
@@ -203,27 +222,26 @@ router.get('/filter/:filters', async (req, res) => {
 
 //complete Profile
 router.put('/updateProfile/:id', async (req, res) => {
-    try{
+    try {
         let customer;
-    if (req.body.userType == "Buyer") {
-        const { error } = validateBuyer(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-        customer = await Buyer.updateOne({_id: req.params.id}, {$set: req.body});
+        if (req.body.userType == "Buyer") {
+            const { error } = validateBuyer(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            customer = await Buyer.findOneAndUpdate({ _id: req.params.id }, { $set: req.body }, { new: true });
 
-    } else if (req.body.userType == "Seller") {
-        console.log('if seller');
-        const { error } = validateSeller(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-        customer = await Seller.updateOne({_id: req.params.id}, {$set: req.body});
+        } else if (req.body.userType == "Seller") {
+            console.log('if seller');
+            const { error } = validateSeller(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            customer = await Seller.findOneAndUpdate({ _id: req.params.id }, { $set: req.body }, { new: true });
 
-    } else if (req.body.userType = "Both") {
-        const { error } = validateBoth(req.body);
-        if (error) return res.status(400).send(error.details[0].message);
-        customer = await Both.updateOne({_id: req.params.id}, {$set: req.body});
-    }
-        //const customer = await Both.updateOne({_id: req.params.id}, {$set: req.body});
+        } else if (req.body.userType = "Both") {
+            const { error } = validateBoth(req.body);
+            if (error) return res.status(400).send(error.details[0].message);
+            customer = await Both.findOneAndUpdate({ _id: req.params.id }, { $set: req.body }, { new: true });
+        }
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
-        console.log(customer);
+        // console.log(customer);
         res.json({
             status: 200,
             success: true,
@@ -242,27 +260,27 @@ router.put('/updateProfile/:id', async (req, res) => {
 });
 
 
-router.post('/deleteRequest/:id', async(req, res) => {
+router.post('/deleteRequest/:id', async (req, res) => {
     const { error } = validateDeleteRequest(req.body);
     if (error) return res.status(400).json(error.details[0].message);
 
     let customer = await Customer.findOne({ email: req.body.email });
     if (!customer) return res.status(400).send('Can not find a customer with this email. please check wheather you entered the right email address.');
-    
+
     const request = new DeleteRequest({
-     name: req.body.name,
-     email: req.body.email,
-     reason: req.body.reason,
-     message: req.body.reason,
-     user: customer._id
- });
+        name: req.body.name,
+        email: req.body.email,
+        reason: req.body.reason,
+        message: req.body.reason,
+        user: customer._id
+    });
     try {
         const newRequest = await request.save();
         res.json({
             status: 200,
             success: true,
             msg: 'Your Request has been successfully sent.',
-         
+
         });
     } catch (error) {
         console.log(error);
@@ -312,7 +330,7 @@ router.put('/changePassword/:id', async (req, res) => {
     const customer = await Customer.findById(req.params.id);
     if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
     const validPassword = await bcyrpt.compare(req.body.oldPassword, customer.password);
-    if (!validPassword) return res.status(400).send('Invalid Email or password');
+    if (!validPassword) return res.status(403).send('Wrong password');
     try {
         const salt = await bcyrpt.genSalt(10);
         customer.password = await bcyrpt.hash(req.body.newPassword, salt);
@@ -339,7 +357,7 @@ router.put('/changeEmail/:id', async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
     try {
         let user = await Customer.findOne({ email: req.body.email });
-    if (user) return res.status(400).send('Customer with this email already exists.');
+        if (user) return res.status(400).send('Customer with this email already exists.');
         const customer = await Customer.findByIdAndUpdate(req.params.id, { email: req.body.email, verified: false }, { new: true });
         if (!customer) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
         res.json({
@@ -370,7 +388,7 @@ router.put('/subscribe/:id', async (req, res) => {
             success: true,
             subscriber: subscriber,
             msg: `You have successfully subscribed to ${subscribed.companyName}.`,
-            subscribed: subscribed
+            subscriberUser: subscribed
         });
     } catch (error) {
         res.json({
@@ -387,15 +405,15 @@ router.put('/unsubscribe/:id', async (req, res) => {
     try {
         const subscriber = await Buyer.findOneAndUpdate({ _id: req.params.id }, { $pull: { 'subscribedTo': req.body.id } }, { new: true });
         if (!subscriber) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
-
         const unsubscribed = await Seller.findOneAndUpdate({ _id: req.body.id }, { $pull: { 'subscribers': req.params.id } }, { new: true });
         if (!unsubscribed) return res.json({ status: 404, success: false, msg: 'The Customer you are subscribing to can not be found' });
+        console.log('success');
         res.json({
             status: 200,
             success: true,
             subscriber: subscriber,
             msg: `You have successfully subscribed to ${unsubscribed.companyName}.`,
-            subscribed: unsubscribed
+            subscriberUser: unsubscribed
         });
     } catch (error) {
         res.json({
@@ -414,9 +432,9 @@ router.put('/forgotPassword', async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
 
     let customer = await Customer.findOne({ email: req.body.email });
-    if (!customer) return res.status(400).send('No user found with that email address');
+    if (!customer) return res.status(404).send('No user found with that email address');
     try {
-        await sendPasswordResetToken(customer);
+        //await sendPasswordResetToken(customer);
         res.json({
             status: 200,
             success: true,
@@ -435,6 +453,7 @@ router.put('/forgotPassword', async (req, res) => {
 
 router.put('/resetPassword/:token', async (req, res) => {
     const user = jwt.verify(req.params.token, process.env.jwtPrivateKey);
+    if (!user) return res.status(400).send('Invalid Token');
     const { error } = validatePassword(req.body.newPassword);
     if (error) return res.status(400).send(error.details[0].message);
     try {

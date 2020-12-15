@@ -83,7 +83,7 @@ module.exports = {
 //functions
 module.exports.validateAdmin = function(admin){
     const joiAdmin = joiUser.keys({
-        title: Joi.string()
+        title: Joi.string(),
     });
     return joiAdmin.validate(admin);
 };
@@ -114,7 +114,7 @@ module.exports.generateAuthToken = function(user){
 };
 
 const transport = nodemailer.createTransport(nodemailerSendgrid({
-    apiKey: process.env.sendGridApiKey
+    apiKey: process.env.SENDGRID_API_KEY
 }));
  
 module.exports.sendConfirmationEmail = function(user){
@@ -124,13 +124,12 @@ module.exports.sendConfirmationEmail = function(user){
         },process.env.jwtPrivateKey);
 
         const url = `localhost:4200/email_confirmation/${token}`
-    //     return transport.sendMail({
-    //     from: 'Tamenemihret@gmail.com',
-    //     to: `${user.firstName} <${user.email}>`,
-    //     subject: 'Confirmation Email',
-    //     html: `Copy and paste the link below to confirm Your email.<a href=${url}>${url}</a> If you did not request this, please ignore this email.`
-    // });
-    return token;
+        return transport.sendMail({
+        from: 'Tamenemihret@gmail.com',
+        to: `${user.firstName} <${user.email}>`,
+        subject: 'Confirmation Email',
+        html: `Copy and paste the link below to confirm Your email.<a href=${url}>${url}</a> If you did not request this, please ignore this email.`
+    });
 }
 
 module.exports.sendPasswordResetToken = function(user){
@@ -142,17 +141,17 @@ module.exports.sendPasswordResetToken = function(user){
 
         const url = `localhost:4200/reset_password/${token}`
       
-//         return transport.sendMail({
-//         from: 'Tamenemihret@gmail.com',
-//         to: `${user.firstName} <${user.email}>`,
-//         subject: 'B2B Password Reset',
-//         //html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
-//         html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
-//         Please click on the link below, or paste this into your browser to complete the process:<br>
-//         <a href=${url}>${url}</a> <br>
-//         If you did not request this, please ignore this email and your password will remain unchanged.`
-//    });
-  return token;
+        return transport.sendMail({
+        from: 'Tamenemihret@gmail.com',
+        to: `${user.firstName} <${user.email}>`,
+        subject: 'B2B Password Reset',
+        //html: `confirm Your email by clicking the following link. <a href=${url}>${url}</a>`
+        html: `You are receiving this because you (or someone else) have requested to reset of the password for your account.<br>
+        Please click on the link below, or paste this into your browser to complete the process:<br>
+        <a href=${url}>${url}</a> <br>
+        If you did not request this, please ignore this email and your password will remain unchanged.`
+   });
+  //return token;
 }
 module.exports.validatePassword = function(password){
     return Joi.validate(password, new PasswordComplexity({
