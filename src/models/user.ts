@@ -111,7 +111,7 @@ module.exports.generateAuthToken = function(user){
 };
 
 const transport = nodemailer.createTransport(nodemailerSendgrid({
-    apiKey: process.env.sendGridApiKey
+    apiKey: process.env.SENDGRID_API_KEY
 }));
  
 module.exports.sendConfirmationEmail = function(user){

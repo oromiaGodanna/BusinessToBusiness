@@ -99,24 +99,22 @@ function promotionTemplate(username,  intro, instructions, buttonText, buttonLin
 }
 
 
-function generateEmailList(req) {
+function generateEmailList(subscribers, email) {
     let emails = [];
-    req.to.array.forEach(elementTo => {
+    subscribers.forEach(subscriber => {
 
-        req.username.array.forEach(elementUsername => {
             emails.push({
-                to: elementTo,
-                from: 'b2b@b2b.com',
-                subject: req.body.subject,
+                to: subscriber.email,
+                from: 'tungat72@gmail.com', // because gmail requires you to verify single sender
+                subject: email.subject,
                 html: promotionTemplate(
-                    elementUsername,
-                    req.body.intro,
-                    req.body.instructions,
-                    req.body.buttonText,
-                    req.body.buttonLink
+                    subscriber.firstName,
+                    email.intro,
+                    email.instructions,
+                    email.buttonText,
+                    email.buttonLink
                 )
-            })
-        });
+            });
         
     });
 

@@ -1,40 +1,141 @@
+import { response } from "express";
+
 export { };
 
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { Conversation } = require('../../src/models/message');
+const { User } = require('../../src/models/user');
+const { Customer } = require('../../src/models/customer');
 
-let server;
+let server = require('../../src/server');;
+let token;
+let loggedInUserId;
+let users: any = [
+    {
+        // _id: mongoose.Types.ObjectId().toHexString(),
+        email: 'user1.test@gmail.com',
+        password: 'user1.Test',
+        firstName: 'user1',
+        lastName: 'test',
+        userType: 'Both',
+        mobile: '0912345678',
+        companyName: 'user1 company',
+        tinNumber: '1234567891',
 
+    },
+    {
+        // _id: mongoose.Types.ObjectId().toHexString(),
+        email: 'user2.test@gmail.com',
+        password: 'user2.Test',
+        firstName: 'user2',
+        lastName: 'test',
+        userType: 'Both',
+        mobile: '0912345678',
+        companyName: 'user2 company',
+        tinNumber: '1234567891',
+
+    },
+    {
+        // _id: mongoose.Types.ObjectId().toHexString(),
+        email: 'user3.test@gmail.com',
+        password: 'user3.Test',
+        firstName: 'user3',
+        lastName: 'test',
+        userType: 'Both',
+        mobile: '0912345678',
+        companyName: 'user3 company',
+        tinNumber: '1234567891',
+
+    }
+
+];
 
 describe('/messages', () => {
 
-    beforeEach(() => { server = require('../../src/server'); });
+    beforeAll(async (done) => {
+
+        const url = `mongodb://localhost/b2b_tests`;
+        await mongoose.connect(url, { useNewUrlParser: true });
+
+        users.forEach(async (user) => {
+            await request(server)
+                .post('/customer/register')
+                .send(user)
+                .then((err, response) => {
+                    console.log('for register')
+                    console.log(JSON.stringify(response));
+                    console.log(err.text)
+                })
+        })
+
+        // let customers = await Customer.insertMany(users);
+        // console.log(customers);
+        let customers = await Customer.find({});
+        console.log(customers);
+        users = customers;
+
+        await Customer.findOneAndUpdate({ email: 'user1.test@gmail.com' }, { verified: true });
+
+
+        request(server)
+            .post('/customer/login')
+            .send({
+                email: 'user1.test@gmail.com',
+                password: 'user1.Test',
+            })
+            .end((err, response) => {
+                token = response.body.token;
+                // loggedInUserId = response.body.user._id;
+                console.log(JSON.stringify(response));
+                // console.log(response.status);
+                // console.log(response.body);
+                // console.log(`token: ${token}`);
+                done();
+            })
+
+    });
+
+
     afterEach(async () => {
         await Conversation.deleteMany({});
-        server.close();
+        await Customer.deleteMany({});
     });
+
+    afterAll(() => {
+        server.close();
+    })
 
     describe('GET /:userId', () => {
         it('should return all conversations of user', async () => {
 
-            const user1Id = mongoose.Types.ObjectId().toHexString();
-            const user2Id = mongoose.Types.ObjectId().toHexString();
-            const user3Id = mongoose.Types.ObjectId().toHexString();
+            const user1Id = loggedInUserId;
+            const user2Id = users[1]._id;
+            const user3Id = users[2]._id;
 
             const conversations = [
-                { user1: user1Id, user2: user2Id, messages: [] },
-                { user1: user1Id, user2: user3Id, messages: [] },
+                { users: [user1Id, user2Id], messages: [] },
+                { users: [user1Id, user3Id], messages: [] },
+
             ];
 
             await Conversation.insertMany(conversations);
 
-            const res = await request(server).get(`/messages/user/${user1Id}`);
+            const res = await request(server).get(`/messages`).set('token', token);
+
+            console.log(res.body[0].users);
 
             expect(res.status).toBe(200);
             expect(res.body.length).toBe(2);
-            expect(res.body.some(g => g.user1 === user1Id && g.user2 === user2Id)).toBeTruthy();
-            expect(res.body.some(g => g.user1 === user1Id && g.user2 === user3Id)).toBeTruthy();
+            expect(res.body.some(g => { console.log(g.users); g.users.includes(user1Id) && g.users.includes(user2Id) })).toBeTruthy();
+            expect(res.body.some(g => { console.log(g.users); g.users.includes(user1Id) && g.users.includes(user3Id) })).toBeTruthy();
+            // expect(res.body.some(g => g.users.includes(user1Id) && g.users.includes(user3Id))).toBeTruthy();
+            // expect(res.body[0].users).toEqual(expect.arrayContaining([user1Id, user2Id]));
+            // expect(res.body[1].users).toEqual(expect.arrayContaining([user1Id, user3Id]));
+            // expect(res.body.some(g => g.users.toEqual(expect.arrayContaining([user1Id, user3Id]))));
+            // expect(res.body.some(g => g.users === [user1Id, user3Id])).toBeTruthy();
+            // expect(res.body.some(g => g.user1 === user1Id && g.user2 === user2Id)).toBeTruthy();
+            // expect(res.body.some(g => g.user1 === user1Id && g.user2 === user3Id)).toBeTruthy();
 
         });
     });
@@ -64,7 +165,7 @@ describe('/messages', () => {
             expect(res.status).toBe(404);
         });
 
-        it('should return 404 if no genre with the given id exists', async () => {
+        it('should return 404 if no conversation with the given id exists', async () => {
             const id = mongoose.Types.ObjectId();
             const res = await request(server).get('/messages/' + id);
 
@@ -200,12 +301,12 @@ describe('/messages', () => {
     // what if user id and message id is not valid????
     describe('PUT /:userId/:convId/:messageId', () => {
 
-        it('should return 404 if conversation Id is not a valid Id', async () => {
+        it('should return 400 if conversation Id is not a valid Id', async () => {
 
             const res = await request(server)
                 .put(`/messages/${mongoose.Types.ObjectId().toHexString()}/1/${mongoose.Types.ObjectId().toHexString()}`);
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it('should return 404 if conversation with the given Id does not exist', async () => {
@@ -280,12 +381,12 @@ describe('/messages', () => {
 
     describe('DELETE /:userId/:convId', () => {
 
-        it('should return 404 if conversation Id is not a valid Id', async () => {
+        it('should return 400 if conversation Id is not a valid Id', async () => {
 
             const res = await request(server)
                 .delete(`/messages/${mongoose.Types.ObjectId().toHexString()}/1`);
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it('should return 404 if conversation with the given Id does not exist', async () => {
@@ -312,7 +413,7 @@ describe('/messages', () => {
             const res1 = await request(server)
                 .post('/messages')
                 .send({ user1: user1Id, user2: user2Id, messages: [] });
-            
+
             const res = await request(server)
                 .delete(`/messages/${mongoose.Types.ObjectId().toHexString()}/${res1.body._id}`);
 

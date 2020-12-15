@@ -1,6 +1,6 @@
 export {};
 
-const { unreadCount, sendMessage, getConversation } = require('../routes/message');
+const { unreadCount, sendMessage, getConversation, createConversation } = require('../routes/message');
 
 
 var MessageSocket = function (io, socket) {
@@ -12,6 +12,7 @@ var MessageSocket = function (io, socket) {
         message: message.bind(this), // use the bind function to access this.io   // and this.socket in events
         'get unread count': getUnreadMessageCount.bind(this),
         'get conversation': getConversationRealtime.bind(this),
+        'create conversation': createConversationRealtime.bind(this),
     };
 }
 
@@ -64,6 +65,29 @@ async function getConversationRealtime(convId){
     // update number of unread messages
     let countForSender = await unreadCount(this.socket, true);
     this.io.to(this.socket.user._id).emit('unreadCount', countForSender[0]);
+}
+
+async function createConversationRealtime(conversation){
+
+    const { error } = validateConversation(conversation);
+    if (error) return this.socket.error(error.details[0].message);
+
+    // create a notification
+    const newConversation = await createConversation(conversation);
+
+    console.log(newConversation);
+
+    newConversation.users.forEach(async userId => {
+
+        // send conversation list to both users
+        const conversations = await Conversation
+        .find({
+            users: userId,
+        });
+        this.io.to(userId).emit('conversations', conversations);
+
+    });
+
 }
 
 

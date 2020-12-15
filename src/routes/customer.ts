@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
     };
     try {
         const newCustomer = await customer.save();
-        await sendConfirmationEmail(user);
+        // await sendConfirmationEmail(user);
         res.json({
             status: 200,
             success: true,
@@ -126,7 +126,7 @@ router.post('/login', async (req, res) => {
 
 //get logged in Customer
 router.get('/me', auth, async (req, res) => {
-    const customer = await Customer.findById(req.user._id).select('-password');
+    const customer = await Customer.findById(req.user._id).select('-password').populate('subscribers', 'email firstName');
     res.send(customer);
 });
 

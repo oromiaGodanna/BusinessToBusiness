@@ -132,7 +132,7 @@ function validatePromotionEmail(request) {
         to: Joi.array().items(Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })).required(),
         username: Joi.array().items(Joi.string()).required(),
         subject: Joi.string().required(),
-        intro: Joi.array().items(Joi.string()).required(),
+        intro: Joi.string().required(),
         instructions: Joi.string().required(),
         buttonText: Joi.string().required(),
         buttonLink: Joi.string().required()
