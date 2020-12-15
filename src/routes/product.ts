@@ -15,7 +15,7 @@ var imageNames = [];
 
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
-      callBack(null, '../frontendAll/src/assets/images/productImages')
+      callBack(null, './../bTob/src/assets/images/productImages')
   },
   filename: (req, file, callBack) => {
       var d = new Date();

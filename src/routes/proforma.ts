@@ -125,27 +125,8 @@ router.post("/requestProforma/:proformaId",auth, async function (req, res) {
           if (err) {
             res.json({ sucess: false, message: err });
           } else {
-            var customer = [];
-            var notification = Notification();
-            notification.notificationType = "Proforma";
-            notification.date = Date.now();
-            notification.title = "proforma request";
-            notification.content = "checkout the proforma details if you wanna participate";
-            await Customer.find({/*"subscriptionCounter.numberOfQuotations"*/subscriptionCounter: !null && !(0) }, async function (req, cust) {
-              if (err) {
-                res.json({ sucess: false, message: err });
-              } else {
-                for (let i = 0; i < cust.length; i++) {
-                  customer.push(cust[i]._id);
-                }
-                notification.recipients = customer;
-                notification.save(function (err, notified) {
-                  res.status(200).json({ sucess: true, message: "the request is successful" });
-                });
-
-              }
-            })
-            //res.json({ sucess: true, message: proformaUpdated });
+           
+            res.json({ sucess: true, message: proformaUpdated });
           }
           //res.redirect("/products");
         });
