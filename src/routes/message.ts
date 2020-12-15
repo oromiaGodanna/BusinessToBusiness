@@ -188,7 +188,7 @@ router.put('/:convId', auth, async (req, res) => {
 router.put('/deleteMany/:convId', auth, async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.convId)) {
-        return res.status(404).send('Invalid Id.');
+        return res.status(400).send('Invalid Id.');
     }
 
     // if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
@@ -231,7 +231,7 @@ router.put('/deleteMany/:convId', auth, async (req, res) => {
 router.delete('/:convId', auth, async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.convId)) {
-        return res.status(404).send('Invalid conversation id.');
+        return res.status(400).send('Invalid conversation id.');
     }
 
     // if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
@@ -404,11 +404,40 @@ async function getConversation(convId, socket){
 }
 
 
+async function createConversation(convInput){
+
+    let conversation = new Conversation({
+        users: convInput.users,
+        messages: convInput.messages, // empty
+        tracking: [
+            { userId: convInput.users[0], lastTime: Date.now() },
+            { userId: convInput.users[1], lastTime: Date.now() },
+        ]
+    });
+
+    // check that conversation between these users doesn't already exist
+    const conv = await Conversation.find({
+        users: { $size: 2, $all: conversation.users }
+    });
+
+    // console.log(conv);
+
+    if (conv.length == 0) {
+        await conversation.save();
+    } else {
+        conversation = conv[0];
+    }
+
+    return conversation;
+}
+
+
 module.exports = {
     message: router,
     unreadCount: unreadCount,
     sendMessage: sendMessage,
     joinConversations: joinConversations,
-    getConversation: getConversation
+    getConversation: getConversation,
+    createConversation: createConversation
 };
 

@@ -1,5 +1,6 @@
 export {};
 const {Review, validateReview} = require('../models/review');
+const { auth } = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 
@@ -10,7 +11,7 @@ function getOrderByID(){
 }
 
 
-router.post('/addReview', async (req, res) => {
+router.post('/addReview', auth, async (req, res) => {
 
     //validate the request 
     console.log(req.body)
@@ -36,8 +37,8 @@ router.post('/addReview', async (req, res) => {
 });
 
 
-
-router.get('/getReview/:id', async (req, res) => {
+//for a given product
+router.get('/getReview/:id', auth, async (req, res) => {
     //find ratings for a specific product
     const review = await Review.find({productId: req.params.id})
     if (!review) return res.status(404).send('No rating for the given product.');
@@ -46,4 +47,16 @@ router.get('/getReview/:id', async (req, res) => {
 
 
 });
+
+//for a given Order
+router.get('/getOneReview/:id', auth, async (req, res) => {
+    //find ratings for a specific product
+    const review = await Review.find({orderId: req.params.id})
+    if (!review) return res.status(404).send('No rating for the given product.');
+
+    res.send(review);
+
+
+});
+
 module.exports = router;

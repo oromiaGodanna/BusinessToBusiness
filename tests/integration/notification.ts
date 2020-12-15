@@ -60,7 +60,7 @@ describe('/notifications', () => {
         it('should return 404 if user id is not valid', async () => {
             const res = await request(server).get(`/notifications/user/1`);
 
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         })
 
     })

@@ -95,40 +95,50 @@ router.post('/sendMailVerification', async (req, res) => {
 
 
 // send email
-router.post('/email/:id', auth, async (req, res) => {
+router.post('/email/:id', auth, async (req: any, res) => {
+
+
+    console.log('in backend send mail');
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(404).send('Invalid Id.');
     }
 
-    const email = Email.findById(req.params.id);
+    const email = await Email.findById(req.params.id);
+
 
     if (!email) return res.status(404).send('An email with the given id doesn\'t exist');
 
 
     try {
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        const emails = generateEmailList(req)
+
+        console.log(req.body.subscribers);
+        const emails = generateEmailList(req.body.subscribers, email);
+
+        console.log(email);
 
 
-        const msg = {
-            to: req.body.to,
-            from: 'b2b@b2b.com',
-            subject: req.body.subject,
-            html: promotionTemplate(
-                req.body.username,
-                req.body.intro,
-                req.body.instructions,
-                req.body.buttonText,
-                req.body.buttonLink
-            )
-        };
+        // const msg = {
+        //     to: req.body.to,
+        //     from: 'b2b@b2b.com',
+        //     subject: req.body.subject,
+        //     html: promotionTemplate(
+        //         req.body.username,
+        //         req.body.intro,
+        //         req.body.instructions,
+        //         req.body.buttonText,
+        //         req.body.buttonLink
+        //     )
+        // };
 
-        const sent = await sgMail.send(msg);
+        console.log(emails);
+
+        const sent = await sgMail.send(emails);
         res.status(200).send(sent);
     } catch (error) {
-        console.log(error.message);
-        res.status(400).send(new Error(error.message))
+        console.log(error.response.body.errors);
+        res.status(400).send(new Error(error.response.body.errors))
     }
 });
 
@@ -165,7 +175,7 @@ router.get('/email', auth, async (req: any, res) => {
         sender: req.user._id
     });
 
-    if (!emails) return res.status(200).send('This user has not  sent any emails.');
+    // if (!emails) return res.status(200).send('This user has not  sent any emails.');
 
     res.send(emails);
 });
@@ -173,6 +183,11 @@ router.get('/email', auth, async (req: any, res) => {
 
 // get a single email
 router.get('/email/:id', auth, async (req: any, res) => {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(404).send('Invalid Id.');
+    } 
+
     const email = await Email.findById(req.params.id);
 
     if (!email) return res.status(200).send('An email with the given id doesn\'t exist');
@@ -182,7 +197,7 @@ router.get('/email/:id', auth, async (req: any, res) => {
 
 
 // edit an email
-router.put('/email/:id', async (req, res) => {
+router.put('/email/:id', auth, async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(404).send('Invalid Id.');
     }

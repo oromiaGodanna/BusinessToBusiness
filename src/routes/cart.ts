@@ -17,8 +17,11 @@ router.post("/addToCart",auth, async function (req, res) {
     var cart = Cart();
     
     if (!mongoose.Types.ObjectId.isValid(req.body.productId) ) {
-        return res.status(400).json({ success: false,type:false,message: 'Invalid product Id.' });
+        return res.status(400).json({ success: false,type:false,message: 'Invalid Id.' });
     
+    }
+    if(req.body.productId == null){
+        return res.status(400).json({ success: false,type:false,message: '“Product id is required' });
     }
     if((req.body.amount == null) || (!(isNumber(req.body.amount))) || (req.body.productId == null)){
         return res.status(400).json({ success: false,type:false,message: 'validation error' });
@@ -76,7 +79,8 @@ router.post("/addToCart",auth, async function (req, res) {
                                         res.status(500).json({ success: false,type:false,message: err });
                                       }
                                       else{
-                                        res.status(200).json({ success: true,type:true, message: "product added to cart!!"+createdCart});
+                                        //res.status(200).json({ success: true,type:true, message: "product added to cart!!"+createdCart});
+                                        res.status(200).json({ success: true,type:true, message: "product added to cart"});
                                       } 
                                     });
                                 
@@ -105,7 +109,7 @@ router.post("/addToCart",auth, async function (req, res) {
                                 if (err) {
                                     res.status(500).json({ success: false,type:false, message: err });
                                 } else {
-                                    res.status(200).json({ success: true,type:true, message: "cart found.product added to cart" });
+                                    res.status(200).json({ success: true,type:true, message: "product added to cart" });
                                 }
                                 //res.redirect("/products");
                             });
@@ -200,7 +204,7 @@ router.get("/getCart",auth, async function (req, res) {
 router.delete("/removeFromCart/:id",auth, async function (req, res) {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id) ) {
-        return res.status(400).json({ success: false,type:false,message: 'Invalid product Id.' });
+        return res.status(400).json({ success: false,type:false,message: 'Invalid Id.' });
     
     }
 
@@ -228,7 +232,7 @@ router.delete("/removeFromCart/:id",auth, async function (req, res) {
                     if (err) {
                         res.status(500).json({ sucess: false, message: err });
                     } else if (productIncart.nModified == 0) {
-                        res.status(200).send({ sucess: false, message:"no product found to delete"});
+                        res.status(200).send({ sucess: false, message:productIncart});
                     } else {
                         res.status(200).json({ sucess: true, message: productIncart });
                     }

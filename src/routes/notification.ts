@@ -14,7 +14,7 @@ const { SysNotification,
 router.get('', auth, async (req: any, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-        return res.status(404).send('Invalid Id.');
+        return res.status(400).send('Invalid Id.');
     }
 
     const notifications = await SysNotification.find({
@@ -63,7 +63,7 @@ router.get('/:id', auth, async (req: any, res) => {
 router.get('/type/:type', auth, async (req: any, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-        return res.status(404).send('Invalid Id.');
+        return res.status(400).send('Invalid Id.');
     }
 
     // type should be validated
