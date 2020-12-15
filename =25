@@ -1,0 +1,8 @@
++ jest@25.5.4
+updated 1 package and audited 1186 packages in 44.048s
+
+16 packages are looking for funding
+  run `npm fund` for details
+
+found 8 vulnerabilities (3 low, 2 moderate, 3 high)
+  run `npm audit fix` to fix them, or `npm audit` for details

@@ -18,6 +18,7 @@ var itemSchema = new Schema({
 
 var responseSchema = new Schema({
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required:true},
+    respondBy: {type: String,required:true},
     itemId:{type: mongoose.Schema.Types.ObjectId, ref: 'itemSchema', required:true},
     unitPrice:{type: Number,required:true},
 });

@@ -113,7 +113,6 @@ router.post('/login', async (req, res) => {
 
     const validPassword = await bcyrpt.compare(req.body.password, customer.password);
     if (!validPassword) return res.status(400).send('Invalid Email or password');
-
     const token = generateAuthToken(customer);
     res.header('token', token).json({
         status: 200,

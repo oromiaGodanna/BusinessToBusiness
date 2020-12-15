@@ -1,17 +1,21 @@
+import { isNumber } from "util";
+
 export {};
 
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const { Product, Filter, validateProduct } = require('../models/product');
-//const User = require('../models/User');
-//const Order = require('../models/order');
+const mongoose = require('mongoose');
+const { Customer, Buyer, Seller, Both,  DeleteRequest, validateCustomer, validateBuyer, validateSeller, validateBoth, validateDeleteRequest } = require('../models/customer');//const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
+
 const multer = require('multer');
 var imageNames = [];
 
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
-      callBack(null, '../b2b/bTob/src/assets/images/productImages')
+      callBack(null, '../frontendAll/src/assets/images/productImages')
   },
   filename: (req, file, callBack) => {
       var d = new Date();
@@ -29,34 +33,6 @@ const upload = multer({ storage: storage })
 
 router.use(bodyParser.json());
 
-router.use(function (req, res, next) {
-  var token = {
-    userId: "user1211143",
-    userType: "seller"
-  };
-        /*  
-            var token = req.body.token || req.body.query || req.headers['x-access-token'];
-            if(token){
-                // verify token
-                jwt.verify(token, secret, function(err, decoded){
-                    if(err){
-                    res.json({sucess: false, message: "Token Invalid"});
-                    }else{
-                    req.decoded = decoded;
-                    next();
-                    }
-                });
-            }else{
-                res.json({ sucess: false, message:"No Token was provided" });
-            }        
-        */;
-  if (token) {
-    req.token = token;
-    next();
-  } else {
-    res.json({ sucess: false, message: "No Token was provided" });
-  }
-});
 
 router.post('/file', upload.array('file'), (req, res, next) => {
   const file = req.file;
@@ -69,22 +45,9 @@ router.post('/file', upload.array('file'), (req, res, next) => {
     res.send(file);
 })
 
-router.post("/createProduct", upload.array('images'), async function (req, res) {
+router.post("/createProduct", upload.array('images'),auth, async function (req, res) {
   var product = Product();
-  product.userId = req.token.userId;
-  /*product.productName = req.body.productName;
-  product.productCategory = req.body.productCategory;
-  product.productSubCategory = req.body.productSubCategory;
-  product.description = req.body.description;
-  product.minOrder = req.body.minOrder;
-  product.price = req.body.price;
-  product.keyword = req.body.keyword;
-  product.images = req.body.images;
-  product.additionalProductInfo = req.body.additionalProductInfo;
-  product.createDate = req.body.createDate;
-  const image = req.body.image;
-  console.log(image);*/
-
+  product.userId = req.user._id;
   product.productName = req.body.productName;
   product.productCategory = req.body.productCategory;
   product.productSubCategory = req.body.productSubCategory;
@@ -99,8 +62,10 @@ router.post("/createProduct", upload.array('images'), async function (req, res) 
   //const images = req.images;
   //console.log(this.images);
   imageNames=[];
-  if ((req.token.userId = "" || null) || (req.token.userType.localeCompare("seller"))) {
-    res.json({
+  
+  //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {  
+    res.status(401).json({
       sucess: false,
       message: "You must to login to add product and you must be seller"
     });
@@ -108,15 +73,15 @@ router.post("/createProduct", upload.array('images'), async function (req, res) 
   } else {
     const { error } = validateProduct(req.body);
     if (error) {
-      return res.status(400).send(error.details[0].message);
+       res.status(400).json({ sucess: false, message: "Validation error" });
 
     } else {
 
       await product.save(async function (err, productCreated) {
         if (err) {
-          res.json({ sucess: false, message: err });
+          res.status(500).send(err);
         } else {
-          res.json({ sucess: true, message: "product added" + productCreated });
+          res.status(200).json({ sucess: true, message: "Product added",data:productCreated});
         }
       });
 
@@ -124,11 +89,17 @@ router.post("/createProduct", upload.array('images'), async function (req, res) 
   }
 });
 
-router.post("/updateProduct/:id", async function (req, res) {
+router.post("/updateProduct/:id",auth, async function (req, res) {
 
-  const tok = req.token.userId;
-  if ((req.token.userId = "" || (req.token.userId = null)) || (req.token.userType.localeCompare("seller"))) {
-    res.json({
+  const tok = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
+  }
+
+  //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {  
+      res.status(401).json({
       sucess: false,
       message: "You must to login to update product and you must be seller"
     });
@@ -136,27 +107,30 @@ router.post("/updateProduct/:id", async function (req, res) {
   } else {
 
     const { error } = validateProduct(req.body);
-   console.log(req.body.productName);
-   console.log(req.productName);
-    console.log(req.body.minOrder);
     if (error) {
-      return res.status(400).send(error.details[0].message);
+       res.status(400).send("Validation error");
 
-    } else {
+    }else{
+
+
       //console.log(tok);
       await Product.findOne({ _id: req.params.id }, async function (err, product) {
+        //console.log(product.userId);
+         //console.log(tok);
+        // console.log(product.userId.localeCompare( tok ));
         if (err) {
           throw err;
 
         } else if (product == null) {
-          res.json({ sucess: true, message: "product not found" });
+          res.status(404).json({ sucess: true, message: "product not found" });
 
-        } else if (product.userId != tok) {
+        } else if ((product.userId.localeCompare( tok )) != 0) {
           //console.log(tok);
-          res.send("you cannot update the product");
+          res.status(404).send("Invalid Id.");
 
         } else {
 
+         
           await Product.updateOne({ _id: req.params.id }, {
             $set: {
 
@@ -174,15 +148,16 @@ router.post("/updateProduct/:id", async function (req, res) {
             }
           }, async function (err, productD) {
             if (err) {
-              res.json({ sucess: false, message: err });
+              res.status(500).json({ sucess: false, message: err });
             } else {
-              res.json({ sucess: true, message: productD });
+              res.status(200).json({ sucess: true, message: productD });
             }
             //res.redirect("/products");
           });
+        
         }
       })
-    }
+  }
   }
 });
 //////
@@ -191,30 +166,35 @@ router.get("/getProducts/:offset/:limit", async function (req, res) {
    var limit = Number(req.params.limit);
   await Product.find({ specialOfferId: null,deleted:false}, async function (err, products) {
     if (err) throw err;
-    res.send(products);
-  }).sort('createDate').skip(offset).limit(limit);
+    res.status(200).send(products);
+  }).sort('-createDate').skip(offset).limit(limit);
 });
 
 router.get("/getAllProducts", async function (req, res) {
   
   await Product.find({ specialOfferId: null,deleted:false}, async function (err, products) {
     if (err) throw err;
-    res.send(products);
-  }).sort('createDate');
+    res.status(200).send(products);
+  }).sort('-createDate');
 });
 
 
 router.get("/getProduct/:id", async function (req, res) {
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
+  }
+
   Product.findOne({ _id: req.params.id,deleted:false }, async function (err, product) {
     if (err) {
       throw err;
     } else if (product == null) {
-      res.send("product not found");
+      res.status(404).send(product);
     } else {
-      res.send(product);
+      res.status(200).send(product);
     }
 
-  });
+  }).sort('-createDate');
 });
 
 router.post("/getProducts", async function (req, res) {
@@ -222,33 +202,35 @@ router.post("/getProducts", async function (req, res) {
   await Product.find({ _id: { $in: productIds },deleted:false}, async function (err, product) {
     if (err) {
       throw err;
-    } else if (product == null) {
-      res.send("product not found");
     } else {
-      res.send(product);
+      res.status(200).send(product);
     }
 
-  });
+  }).sort('-createDate');;
 });
 
 
-router.get("/getProductSeller/:userId", async function (req, res) {
+router.get("/getProductSeller/:userId",auth, async function (req, res) {
+ 
+  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+    return res.status(400).send('Invalid Id.');
+  }
 
-  if (req.token.userId.localeCompare(req.params.userId) || (req.token.userType.localeCompare("seller"))) {
-    res.json({
+  var tokUserId = req.user._id;
+  //if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+    res.status(401).json({
       sucess: false,
       message: "You must to login to get your products and you must be seller"
     });
 
   } else {
-    await Product.find({ userId: req.params.userId,deleted:false }, async function (err, product) {
+    await Product.find({ userId: tokUserId,deleted:false }, async function (err, product) {
       if (err) {
         throw err;
-      } else if (product == null) {
-        res.send("you have not posted products yet");
-      }
-      res.send(product);
-    });
+      } 
+      res.status(200).send(product);
+    }).sort('-createDate');
   }
 });
 
@@ -258,9 +240,9 @@ router.get("/getAllRelatedProductByCategory/:productCategory", async function (r
       if (err) {
         throw err;
       } else{
-        res.send(product);
+        res.status(200).send(product);
       }
-    });
+    }).sort('-createDate');
  
 });
 
@@ -271,9 +253,9 @@ router.get("/getRelatedProductByCategory/:productCategory/:offset/:limit", async
     if (err) {
       throw err;
     } else{
-      res.send(product);
+      res.status(200).send(product);
     }
-  }).sort('createDate').skip(offset).limit(limit);
+  }).sort('-createDate').skip(offset).limit(limit);
 
 });
 
@@ -283,9 +265,9 @@ router.get("/getAllRelatedProductBySubCategory/:productSubCategory", async funct
     if (err) {
       throw err;
     } else{
-      res.send(product);
+      res.status(200).send(product);
     }
-  });
+  }).sort('-createDate');
 
 });
 
@@ -296,17 +278,23 @@ router.get("/getRelatedProductBySubCategory/:productSubCategory/:offset/:limit",
     if (err) {
       throw err;
     } else{
-      res.send(product);
+      res.status(200).send(product);
     }
-  }).sort('createDate').skip(offset).limit(limit);
+  }).sort('-createDate').skip(offset).limit(limit);
 
 });
 
 
-router.delete("/deleteProduct/:id", async function (req, res) {
-  const tok = req.token.userId;
-  if ((req.token.userId == "" || null) || (req.token.userType.localeCompare("seller"))) {
-    res.json({
+router.delete("/deleteProduct/:id",auth, async function (req, res) {
+  
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send('Invalid Id.');
+  }
+
+  const tok =req.user._id;
+ // if ((req.user._id = "" || null) || (req.user.userType != 'Admin' && req.user.userType != 'Seller' && req.user.userType != 'Both')) {
+  if ((req.user._id = "" || null) || (req.user.userType != 'Seller' && req.user.userType != 'Both')) {   
+    res.status(401).json({
       success: false,
       message: "You must to login to delete the product and you must be the product's seller"
     });
@@ -317,11 +305,11 @@ router.delete("/deleteProduct/:id", async function (req, res) {
         throw err;
 
       } else if (product == null) {
-        res.json({ success: true, message: "product not found" });
+        res.status(404).json({ success: true, message: "product not found" });
 
-      } else if (product.userId != tok) {
-        console.log(req.token.userId);
-        res.send("you cannot delete the product");
+      } else if ((product.userId.localeCompare( tok )) != 0) {
+       
+        res.status(404).send("product not found");
 
       } else {
         await Product.updateOne({ _id: req.params.id }, {
@@ -330,9 +318,9 @@ router.delete("/deleteProduct/:id", async function (req, res) {
           }
         }, async function (err, productD) {
           if (err) {
-            res.json({ success: false, message: err });
+            res.status(500).json({ success: false, message: err });
           } else {
-            res.json({ success: true, message: "product deleted" });
+            res.status(200).json({ success: true, message: "product deleted" });
           }
         })
        /* await Product.deleteOne({ _id: req.params.id }, async function (err, ret) {
@@ -361,15 +349,17 @@ router.post("/filter/:offset/:limit", async function (req, res) {
    //console.log(productSubCategory);
    var maxPrice = parseFloat(req.body.maxPrice);
     //console.log(maxPrice);
-    
+    if(!productCategory || !productSubCategory || !maxPrice || !(isNumber(maxPrice))){
+      return res.status(400).send('Validation error.');
+    }
     await Product.find({
       $and:[{ productCategory:productCategory},
       {productSubCategory:productSubCategory},
       {price: { $lt: maxPrice }},
       {deleted:false}]}, async function (err, products) {
       if (err) throw err;
-        res.send(products);
-    }).sort('createDate').skip(offset).limit(limit);
+      res.status(200).send(products);
+    }).sort('-createDate').skip(offset).limit(limit);
 
   
 
@@ -378,19 +368,20 @@ router.post("/filter/:offset/:limit", async function (req, res) {
 router.get("/search/:searchWord/:offset/:limit", async function (req, res) {
   var offset = Number(req.params.offset);
   var limit = Number(req.params.limit);
+  var searchInput = String(req.params.searchWord);
   await Product.find(
     {
-      $or: [{ productName: req.params.searchWord },
-      { keyword: { $in: req.params.searchWord } },
-      { description: req.params.searchWord },
-      { productCategory: req.params.searchWord },
-      { productSubCategory: req.params.searchWord }]
+      $or: [{ productName: searchInput },
+      { keyword: { $in: searchInput } },
+      { description: searchInput },
+      { productCategory: searchInput },
+      { productSubCategory: searchInput }]
     }, async function (err, products) {
       //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
 
       if (err) throw err;
-      res.send(products);
-    }).sort('createDate').skip(offset).limit(limit);
+      res.status(200).send(products);
+    }).sort('-createDate').skip(offset).limit(limit);
 });
 
 module.exports = router;
