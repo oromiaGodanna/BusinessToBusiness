@@ -323,7 +323,7 @@ router.delete('/:id', [auth, role], async (req, res) => {
 });
 
 //change Password
-router.put('/changePassword/:id', async (req, res) => {
+router.put('/changePassword/:id', auth, async (req, res) => {
     console.log('change password');
     const { error } = validatePassword(req.body.newPassword);
     if (error) return res.status(400).send(error.details[0].message);
@@ -351,7 +351,7 @@ router.put('/changePassword/:id', async (req, res) => {
 });
 
 //change email
-router.put('/changeEmail/:id', async (req, res) => {
+router.put('/changeEmail/:id', auth, async (req, res) => {
     console.log('server change email');
     const { error } = validateEmail(req.body.email);
     if (error) return res.status(400).send(error.details[0].message);
@@ -376,7 +376,7 @@ router.put('/changeEmail/:id', async (req, res) => {
 });
 
 //subscribe 
-router.put('/subscribe/:id', async (req, res) => {
+router.put('/subscribe/:id', auth, async (req, res) => {
     try {
         const subscriber = await Buyer.findOneAndUpdate({ _id: req.params.id }, { $addToSet: { 'subscribedTo': req.body.id } }, { new: true });
         if (!subscriber) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
@@ -401,7 +401,7 @@ router.put('/subscribe/:id', async (req, res) => {
 });
 
 //unsubscribe
-router.put('/unsubscribe/:id', async (req, res) => {
+router.put('/unsubscribe/:id',auth, async (req, res) => {
     try {
         const subscriber = await Buyer.findOneAndUpdate({ _id: req.params.id }, { $pull: { 'subscribedTo': req.body.id } }, { new: true });
         if (!subscriber) return res.json({ status: 404, success: false, msg: 'Customer with this Id can not be found' });
@@ -425,6 +425,16 @@ router.put('/unsubscribe/:id', async (req, res) => {
     }
 
 });
+
+router.get('/subscribers/:id', async(req, res) => {
+    // console.log('get subscribers');
+    const customer = await Customer.findById(req.params.id).select('-password').populate('subscribers', 'email firstName lastName companyName');
+    res.json({
+        status: 200,
+        customer: customer
+    });
+});
+
 
 //forgot Password
 router.put('/forgotPassword', async (req, res) => {
