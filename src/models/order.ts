@@ -50,7 +50,7 @@ function validateOrder(order){
     const schema = Joi.object({
         buyerId: Joi.objectId().required(),
         sellerId: Joi.objectId().required(),
-        cartEntryId: Joi.objectId().required(),
+        cartEntryId: Joi.array().required(),
         totalAmount: Joi.number().integer().min(1).required(),
         totalPrice: Joi.number().positive().required(),
         shippingAddress: Joi.object().allow(null).required(),

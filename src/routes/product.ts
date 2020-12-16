@@ -15,7 +15,7 @@ var imageNames = [];
 
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
-      callBack(null, '../frontendAll/src/assets/images/productImages')
+      callBack(null, '../BusinessToBusinessFrontend/src/assets/images/productImages')
   },
   filename: (req, file, callBack) => {
       var d = new Date();
@@ -73,7 +73,7 @@ router.post("/createProduct", upload.array('images'),auth, async function (req, 
   } else {
     const { error } = validateProduct(req.body);
     if (error) {
-       res.status(400).json({ sucess: false, message: "Validation error" });
+       res.status(400).json({ sucess: false, message: error });
 
     } else {
 
