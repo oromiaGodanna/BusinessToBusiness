@@ -118,17 +118,30 @@ const sellerSchema = extendSchema(customerSchema, {
         default: null
     },
     subscription: {     
-        type: ObjectId, 
-        ref: 'Subscription',
-        default: null 
-        // id : {
-        //     type: ObjectId, 
-        //     ref: 'Subscription',
-        //     default: null
-        // },
-        // startDate: Date,
-        // endDate: Date,
-        // counter: Number  //used and unused
+        // type: ObjectId, 
+        // ref: 'Subscription',
+        // default: null 
+        id : {
+            type: ObjectId, 
+            ref: 'Subscription',
+            default: null
+        },
+        purchaseDate: {
+            type: Date,
+            default: null,
+        },
+        numOfProducts: {
+            type: Number,
+            default: 0
+        },
+        numOfQuatations:{
+            type: Number,
+            default: 0,
+        },
+        numOfEmails:{
+            type: Number,
+            default: 0
+        }
     },
     products: [{
         type:ObjectId,
@@ -228,7 +241,7 @@ const joiSeller = joiCustomer.keys({
         linkedin: Joi.alternatives().try(Joi.string().uri(),Joi.valid(null)),
     },
     fax: Joi.alternatives().try(Joi.string(),Joi.valid(null)),
-    yearEstablished: Joi.alternatives().try(Joi.date().max(moment().year()),Joi.valid(null)), 
+    yearEstablished: Joi.alternatives().try(Joi.date(),Joi.valid(null)), 
     officalWebsite: Joi.alternatives().try(Joi.string().trim().uri(),Joi.valid(null)),  
     businessType: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
     numOfEmployees: Joi.alternatives().try(Joi.number().integer().min(0),Joi.valid(null)),

@@ -2,7 +2,6 @@ export {};
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Joi = require('joi');
-
 const userType = ["Buyer", "Seller", "Admin", "Both"];
 
 const taskSchema = new Schema({
@@ -10,34 +9,55 @@ const taskSchema = new Schema({
         type: String,
         required: [true, 'The Task Name should be specified']
     },
-    description: String,
+    description: {
+        type: String,
+        required: true,
+    },
     userType: {
         type: String,
         enum: userType,
     },
-    preConditions: [String],
+    preConditions: {
+        type: String,
+        default: 'None'
+    },
+    steps : {
+        type: String,
+        default: 'None'
+    },
 });
 
 const FAQSchema = new Schema({
-    question: String,
-    answer: String
+    question: {
+        type: String,
+        required: true,
+    },
+    answer: {
+        type: String,
+        required: true
+    }
 });
 
 const topicsSchema = new Schema({
-    title: String,
-    subTitle: String,
+    title: {
+        type: String,
+        required: true
+    },
+    subTitle: {
+        type: String,
+        required: true
+    },
     icon: String,
     tasks : [taskSchema],
     FAQs: [FAQSchema],
     popular: Boolean,
 });
 
-const Task = mongoose.model('Task', taskSchema);
+//const Task = mongoose.model('Task', taskSchema);
 const Topic = mongoose.model('Topic', topicsSchema);
 
 module.exports = {
       Topic: Topic,
-       Task: Task
 };
 module.exports.validateTopics = function(topic){
 
@@ -46,9 +66,11 @@ module.exports.validateTopics = function(topic){
 module.exports.validateTask = function(task){
     const schema = {
         taskName: Joi.string().required(),
+        description: Joi.string().required(),
         userType: Joi.string(),
-        preConditions: Joi.array().items(Joi.string()).default(null),
-        description: Joi.string()
+        preConditions: Joi.string().default(null),
+        steps: Joi.string().default(null)
+      
     }
     return Joi.validate(task, schema);
 }
