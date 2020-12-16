@@ -118,9 +118,6 @@ const sellerSchema = extendSchema(customerSchema, {
         default: null
     },
     subscription: {     
-        // type: ObjectId, 
-        // ref: 'Subscription',
-        // default: null 
         id : {
             type: ObjectId, 
             ref: 'Subscription',
