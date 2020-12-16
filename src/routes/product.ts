@@ -15,7 +15,7 @@ var imageNames = [];
 
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
-      callBack(null, './../bTob/src/assets/images/productImages')
+      callBack(null, './../frontendAll/src/assets/images/productImages')
   },
   filename: (req, file, callBack) => {
       var d = new Date();
@@ -371,11 +371,11 @@ router.get("/search/:searchWord/:offset/:limit", async function (req, res) {
   var searchInput = String(req.params.searchWord);
   await Product.find(
     {
-      $or: [{ productName: searchInput },
-      { keyword: { $in: searchInput } },
-      { description: searchInput },
-      { productCategory: searchInput },
-      { productSubCategory: searchInput }]
+      $or: [{ productName: /searchInput/i },
+      { keyword: { $in: /searchInput/i } },
+      { description: /searchInput/i },
+      { productCategory: /searchInput/i },
+      { productSubCategory: /searchInput/i }]
     }, async function (err, products) {
       //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
 
