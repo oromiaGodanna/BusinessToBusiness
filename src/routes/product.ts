@@ -371,12 +371,13 @@ router.get("/search/:searchWord/:offset/:limit", async function (req, res) {
   var searchInput = String(req.params.searchWord);
   await Product.find(
     {
-      $or: [{ productName: /searchInput/i },
-      { keyword: { $in: /searchInput/i } },
-      { description: /searchInput/i },
-      { productCategory: /searchInput/i },
-      { productSubCategory: /searchInput/i }]
-    }, async function (err, products) {
+      $or: [{ productName:{ $regex: searchInput, $options: "i" } },
+      { keyword: { $in: searchInput } },
+      { description: { $regex: searchInput, $options: "i" } },
+      { productCategory: { $regex: searchInput, $options: "i" } },
+      { productSubCategory: { $regex: searchInput, $options: "i" } }]
+    }
+    /*{ productName: { $regex: searchInput, $options: "i" }}*/, async function (err, products) {
       //Product.find({productName:/.*req.body.filter.*/}, function(err, products) {
 
       if (err) throw err;
