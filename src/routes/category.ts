@@ -13,11 +13,7 @@ var categoryImage = [];
 
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
-<<<<<<< HEAD
-      callBack(null, '../BusinessToBusinessFrontend/src/assets/images/categoryImages')
-=======
       callBack(null, './../bTob/src/assets/images/categoryImages')
->>>>>>> 0dc85481ea1fabd6c9e373492eb12f7613214b93
   },
   filename: (req, file, callBack) => {
       var d = new Date();
