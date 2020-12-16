@@ -48,6 +48,7 @@ router.get('/getBuyerOrders/:id', auth,  async (req, res) =>{
         
     // });
     const orders = await Order.find({buyerId: req.params.id})
+
     if (!orders) return res.status(404).send('No Order for the given product.');
 
     res.send({orders});
@@ -66,7 +67,7 @@ router.get('/getSupplierOrders/:id', auth, async (req, res) =>{
     const orders = await Order.find({sellerId: req.params.id})
 
     if (!orders) return res.status(404).send('No Order for the given product.');
-    console.log(orders);
+
     res.send({orders});
 });
 

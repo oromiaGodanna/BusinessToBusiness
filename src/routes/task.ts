@@ -14,6 +14,7 @@ router.post('/', async(req, res)=>{
         res.json({
             status: 200,
             success: true,
+            msg: 'topic successfully created',
             topic: newTopic
         })
     }catch(error){
@@ -57,7 +58,7 @@ router.put('/addTask/:topic_id', async(req, res)=>{
         res.json({
             status: 200,
             success: true,
-            msg: 'Task Added successfullt',
+            msg: 'Task Added successfully',
             topic:topic
         })
     }catch(error){
@@ -124,7 +125,7 @@ router.delete('/deleteTask/:topic_id/:task_id', async(req, res)=>{
        res.json({
         status: 200,
         success: true,
-        msg: 'topic successfully deleted',
+        msg: 'task successfully deleted',
         task: task });    
     }catch(error){
         res.json({

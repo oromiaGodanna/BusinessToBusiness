@@ -39,11 +39,11 @@ router.post('/addRating', auth, async (req, res) => {
 
 
 
-router.get('/getRating/:id',auth,  async (req, res) => {
+router.get('/getRating/:id',  async (req, res) => {
     //find ratings for a specific product
-    const allRatings = await Rating.find({productId: req.params.id})
-    if (!allRatings) return res.status(404).send('No rating for the given product.');
-
+    const allRatings = await Rating.find({productId: req.params.id});
+    //if (!allRatings) return res.status(404).send('No rating for the given product.');
+    if (!allRatings.length)  return res.status(404).send({rating:0});
     //iterate through each and return total rating value
     let rating = 0; let ratingsCount = allRatings.length;
     for(let i of allRatings){

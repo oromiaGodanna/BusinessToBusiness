@@ -30,7 +30,7 @@ const user = require('./routes/user');
 const subscription = require('./routes/subscription');
 const task = require('./routes/task');
 const report = require('./routes/report');
-const country = require('./routes/country');
+
 
 // jerry's
 const productRoutes = require('./routes/product');
@@ -118,11 +118,11 @@ app.use('/auth', auth);
 
 // mercy's
 app.use('/customer', customer);
-app.use('/user', user);
+app.use('/admin', user);
 app.use('/subscription', subscription);
 app.use('/tasks', task);
 app.use('/report', report);
-app.use('/countries', country);
+
 
 // jerry's
 app.use('/product',productRoutes);

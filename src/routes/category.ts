@@ -13,7 +13,11 @@ var categoryImage = [];
 
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
+<<<<<<< HEAD
       callBack(null, '../BusinessToBusinessFrontend/src/assets/images/categoryImages')
+=======
+      callBack(null, './../bTob/src/assets/images/categoryImages')
+>>>>>>> 0dc85481ea1fabd6c9e373492eb12f7613214b93
   },
   filename: (req, file, callBack) => {
       var d = new Date();
@@ -47,7 +51,7 @@ router.post("/addCategory", upload.single('image'),auth, async function (req, re
 
   
 
-    if (req.body.categoryName == null || req.body.categoryName == "") {
+    if (req.body.categoryName == null || req.body.categoryName == "" ) {
       res.status(400).json({
         sucess: false,
         message: "required fields are not filled or validation error"
